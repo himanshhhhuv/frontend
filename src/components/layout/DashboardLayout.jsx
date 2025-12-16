@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Home01Icon,
@@ -113,6 +113,7 @@ const navConfig = {
 
 function AppSidebar({ role }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const config = navConfig[role] || navConfig.STUDENT;
 
@@ -160,7 +161,7 @@ function AppSidebar({ role }) {
                     <SidebarMenuButton
                       tooltip={item.label}
                       isActive={isActive}
-                      render={<Link to={item.path} />}
+                      onClick={() => navigate(item.path)}
                     >
                       <HugeiconsIcon icon={item.icon} strokeWidth={2} />
                       <span>{item.label}</span>
