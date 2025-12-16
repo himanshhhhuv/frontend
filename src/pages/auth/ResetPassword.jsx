@@ -110,6 +110,7 @@ export default function ResetPassword() {
                   id="password"
                   type="password"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   {...register("password")}
                 />
                 {errors.password && (
@@ -125,6 +126,7 @@ export default function ResetPassword() {
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   {...register("confirmPassword")}
                 />
                 {errors.confirmPassword && (

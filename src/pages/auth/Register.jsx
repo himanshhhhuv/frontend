@@ -83,7 +83,12 @@ export default function Register() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="John Doe" {...register("name")} />
+                <Input
+                  id="name"
+                  placeholder="John Doe"
+                  autoComplete="name"
+                  {...register("name")}
+                />
                 {errors.name && (
                   <p className="text-sm text-destructive">
                     {errors.name.message}
@@ -97,6 +102,7 @@ export default function Register() {
                   id="email"
                   type="email"
                   placeholder="you@example.com"
+                  autoComplete="email"
                   {...register("email")}
                 />
                 {errors.email && (
@@ -113,6 +119,7 @@ export default function Register() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
+                autoComplete="new-password"
                 {...register("password")}
               />
               {errors.password && (
@@ -128,6 +135,7 @@ export default function Register() {
                 <Input
                   id="rollNo"
                   placeholder="2024001"
+                  autoComplete="off"
                   {...register("rollNo")}
                 />
                 {errors.rollNo && (
@@ -142,6 +150,7 @@ export default function Register() {
                 <Input
                   id="phone"
                   placeholder="9876543210"
+                  autoComplete="tel"
                   {...register("phone")}
                 />
                 {errors.phone && (

@@ -78,6 +78,7 @@ export default function Login() {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
+                autoComplete="email"
                 {...register("email")}
               />
               {errors.email && (
@@ -93,6 +94,7 @@ export default function Login() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
+                autoComplete="current-password"
                 {...register("password")}
               />
               {errors.password && (
