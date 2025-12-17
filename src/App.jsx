@@ -64,82 +64,85 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Student Routes */}
-          <Route element={<ProtectedRoute roles={["STUDENT"]} />}>
-            <Route path="/student" element={<DashboardLayout role="STUDENT" />}>
-              <Route index element={<StudentDashboard />} />
-              <Route path="attendance" element={<StudentAttendance />} />
-              <Route path="wallet" element={<StudentWallet />} />
-              <Route path="leaves" element={<StudentLeaves />} />
-              <Route path="complaints" element={<StudentComplaints />} />
-              <Route path="menu" element={<StudentMenu />} />
-              <Route path="profile" element={<StudentProfile />} />
+            {/* Student Routes */}
+            <Route element={<ProtectedRoute roles={["STUDENT"]} />}>
+              <Route
+                path="/student"
+                element={<DashboardLayout role="STUDENT" />}
+              >
+                <Route index element={<StudentDashboard />} />
+                <Route path="attendance" element={<StudentAttendance />} />
+                <Route path="wallet" element={<StudentWallet />} />
+                <Route path="leaves" element={<StudentLeaves />} />
+                <Route path="complaints" element={<StudentComplaints />} />
+                <Route path="menu" element={<StudentMenu />} />
+                <Route path="profile" element={<StudentProfile />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Warden Routes */}
-          <Route element={<ProtectedRoute roles={["WARDEN", "ADMIN"]} />}>
-            <Route path="/warden" element={<DashboardLayout role="WARDEN" />}>
-              <Route index element={<WardenDashboard />} />
-              <Route path="leaves" element={<WardenLeaves />} />
-              <Route path="attendance" element={<WardenAttendance />} />
-              <Route path="complaints" element={<WardenComplaints />} />
+            {/* Warden Routes */}
+            <Route element={<ProtectedRoute roles={["WARDEN", "ADMIN"]} />}>
+              <Route path="/warden" element={<DashboardLayout role="WARDEN" />}>
+                <Route index element={<WardenDashboard />} />
+                <Route path="leaves" element={<WardenLeaves />} />
+                <Route path="attendance" element={<WardenAttendance />} />
+                <Route path="complaints" element={<WardenComplaints />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Admin Routes */}
-          <Route element={<ProtectedRoute roles={["ADMIN"]} />}>
-            <Route path="/admin" element={<DashboardLayout role="ADMIN" />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="rooms" element={<AdminRooms />} />
-              <Route path="menu" element={<AdminMenu />} />
-              <Route path="transactions" element={<AdminTransactions />} />
+            {/* Admin Routes */}
+            <Route element={<ProtectedRoute roles={["ADMIN"]} />}>
+              <Route path="/admin" element={<DashboardLayout role="ADMIN" />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="rooms" element={<AdminRooms />} />
+                <Route path="menu" element={<AdminMenu />} />
+                <Route path="transactions" element={<AdminTransactions />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Canteen Manager Routes */}
-          <Route
-            element={<ProtectedRoute roles={["CANTEEN_MANAGER", "ADMIN"]} />}
-          >
+            {/* Canteen Manager Routes */}
             <Route
-              path="/canteen"
-              element={<DashboardLayout role="CANTEEN_MANAGER" />}
+              element={<ProtectedRoute roles={["CANTEEN_MANAGER", "ADMIN"]} />}
             >
-              <Route index element={<CanteenDashboard />} />
-              <Route path="billing" element={<CanteenBilling />} />
-              <Route path="orders" element={<CanteenOrders />} />
-              <Route path="menu" element={<CanteenMenu />} />
+              <Route
+                path="/canteen"
+                element={<DashboardLayout role="CANTEEN_MANAGER" />}
+              >
+                <Route index element={<CanteenDashboard />} />
+                <Route path="billing" element={<CanteenBilling />} />
+                <Route path="orders" element={<CanteenOrders />} />
+                <Route path="menu" element={<CanteenMenu />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Caretaker Routes */}
-          <Route element={<ProtectedRoute roles={["CARETAKER"]} />}>
-            <Route
-              path="/caretaker"
-              element={<DashboardLayout role="CARETAKER" />}
-            >
-              <Route index element={<CaretakerDashboard />} />
-              <Route path="complaints" element={<CaretakerComplaints />} />
+            {/* Caretaker Routes */}
+            <Route element={<ProtectedRoute roles={["CARETAKER"]} />}>
+              <Route
+                path="/caretaker"
+                element={<DashboardLayout role="CARETAKER" />}
+              >
+                <Route index element={<CaretakerDashboard />} />
+                <Route path="complaints" element={<CaretakerComplaints />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Redirects */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter> 
+            {/* Redirects */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
         <Toaster />
         <ReactQueryDevtools initialIsOpen={false} />
       </ThemeProvider>
