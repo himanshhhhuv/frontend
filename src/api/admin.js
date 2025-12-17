@@ -16,6 +16,11 @@ export const deleteUser = async (id) => {
   return data;
 };
 
+export const updateUserRole = async (id, role) => {
+  const { data } = await api.patch(`/api/admin/users/${id}/role`, { role });
+  return data;
+};
+
 // Room Management
 export const createRoom = async (roomData) => {
   const { data } = await api.post("/api/admin/rooms", roomData);

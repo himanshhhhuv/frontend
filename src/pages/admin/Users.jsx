@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,9 @@ import {
   UserAdd01Icon,
   Delete02Icon,
   FilterIcon,
+  Search01Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,7 +44,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { getUsers, createUser, deleteUser } from "@/api/admin";
+import { getUsers, createUser, deleteUser, updateUserRole } from "@/api/admin";
 
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -80,13 +83,49 @@ const getRoleBadgeVariant = (role) => {
 export default function Users() {
   const [showForm, setShowForm] = useState(false);
   const [roleFilter, setRoleFilter] = useState("ALL");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 10;
   const queryClient = useQueryClient();
 
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Handler for role filter change - also resets page
+  const handleRoleFilterChange = (value) => {
+    setRoleFilter(value);
+    setPage(1);
+  };
+
+  // Handler for search input change - also resets page
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPage(1);
+  };
+
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "users", roleFilter],
+    queryKey: ["admin", "users", roleFilter, debouncedSearch, page, limit],
     queryFn: () =>
-      getUsers({ role: roleFilter === "ALL" ? undefined : roleFilter }),
+      getUsers({
+        role: roleFilter === "ALL" ? undefined : roleFilter,
+        search: debouncedSearch || undefined,
+        page,
+        limit,
+      }),
   });
+
+  const pagination = data?.data?.pagination || {
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 1,
+  };
 
   const {
     register,
@@ -126,6 +165,21 @@ export default function Users() {
     },
     onError: (error) => {
       toast.error("Failed to Delete User", {
+        description: error.response?.data?.message || "Something went wrong.",
+      });
+    },
+  });
+
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ id, role }) => updateUserRole(id, role),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["admin", "users"]);
+      toast.success("Role Updated", {
+        description: data.message || "User role has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to Update Role", {
         description: error.response?.data?.message || "Something went wrong.",
       });
     },
@@ -332,34 +386,57 @@ export default function Users() {
         </Card>
       )}
 
-      {/* Filters */}
-      <div className="flex items-center gap-4">
+      {/* Search and Filters */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Search Input */}
+        <div className="relative flex-1 max-w-sm">
+          <HugeiconsIcon
+            icon={Search01Icon}
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            placeholder="Search by name, email, or roll no..."
+            value={search}
+            onChange={handleSearchChange}
+            className="pl-9"
+          />
+        </div>
+
+        {/* Role Filter */}
         <div className="flex items-center gap-2">
           <HugeiconsIcon
             icon={FilterIcon}
             className="h-4 w-4 text-muted-foreground"
           />
-          <span className="text-sm font-medium">Filter by role:</span>
+          <span className="text-sm font-medium">Role:</span>
+          <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All roles" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Roles</SelectItem>
+              {roles.map((role) => (
+                <SelectItem key={role.value} value={role.value}>
+                  {role.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All roles" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All Roles</SelectItem>
-            {roles.map((role) => (
-              <SelectItem key={role.value} value={role.value}>
-                {role.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Users Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Users {users.length > 0 && `(${users.length})`}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>
+            Users {pagination.total > 0 && `(${pagination.total})`}
+          </CardTitle>
+          {pagination.total > 0 && (
+            <span className="text-sm text-muted-foreground">
+              Showing {(page - 1) * limit + 1}-
+              {Math.min(page * limit, pagination.total)} of {pagination.total}
+            </span>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -374,75 +451,135 @@ export default function Users() {
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Roll No</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.profile?.name || "No name"}
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.profile?.rollNo || "-"}</TableCell>
-                    <TableCell>{user.profile?.phone || "-"}</TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleBadgeVariant(user.role)}>
-                        {user.role.replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <AlertDialog>
-                        <AlertDialogTrigger
-                          render={
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              disabled={deleteMutation.isPending}
-                            />
-                          }
-                        >
-                          <HugeiconsIcon
-                            icon={Delete02Icon}
-                            className="mr-1 h-4 w-4"
-                          />
-                          Delete
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete User</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete{" "}
-                              <strong>
-                                {user.profile?.name || user.email}
-                              </strong>
-                              ? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              variant="destructive"
-                              onClick={() => deleteMutation.mutate(user.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Roll No</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">
+                        {user.profile?.name || "No name"}
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.profile?.rollNo || "-"}</TableCell>
+                      <TableCell>{user.profile?.phone || "-"}</TableCell>
+                      <TableCell>
+                        <Select
+                          
+                          value={user.role}
+                          onValueChange={(newRole) =>
+                            updateRoleMutation.mutate({
+                              id: user.id,
+                              role: newRole,
+                            })
+                          }
+                          disabled={updateRoleMutation.isPending}
+                        >
+                          <SelectTrigger className="w-[180px] ">
+                            <Badge variant={getRoleBadgeVariant(user.role)}>
+                              {user.role.replace("_", " ")}
+                            </Badge>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {roles.map((role) => (
+                              <SelectItem  key={role.value} value={role.value}>
+                                {role.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <AlertDialog>
+                          <AlertDialogTrigger
+                            render={
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={deleteMutation.isPending}
+                              />
+                            }
+                          >
+                            <HugeiconsIcon
+                              icon={Delete02Icon}
+                              className="mr-1 h-4 w-4"
+                            />
+                            Delete
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete User</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete{" "}
+                                <strong>
+                                  {user.profile?.name || user.email}
+                                </strong>
+                                ? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                variant="destructive"
+                                onClick={() => deleteMutation.mutate(user.id)}
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination Controls */}
+              {pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between border-t pt-4 mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Page {page} of {pagination.totalPages}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page <= 1 || isLoading}
+                    >
+                      <HugeiconsIcon
+                        icon={ArrowLeft01Icon}
+                        className="mr-1 h-4 w-4"
+                      />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setPage((p) => Math.min(pagination.totalPages, p + 1))
+                      }
+                      disabled={page >= pagination.totalPages || isLoading}
+                    >
+                      Next
+                      <HugeiconsIcon
+                        icon={ArrowRight01Icon}
+                        className="ml-1 h-4 w-4"
+                      />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
