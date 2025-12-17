@@ -3,6 +3,7 @@ import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,9 @@ export default function ResetPassword() {
     if (!token) {
       setStatus("error");
       setMessage("Invalid reset link.");
+      toast.error("Invalid Link", {
+        description: "This password reset link is invalid.",
+      });
       return;
     }
 
@@ -54,10 +58,18 @@ export default function ResetPassword() {
       const response = await resetPassword(token, data.password);
       setStatus("success");
       setMessage(response.message);
+      toast.success("Password Reset Successful!", {
+        description: "Redirecting to login...",
+      });
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
       setStatus("error");
-      setMessage(err.response?.data?.message || "Failed to reset password.");
+      const errorMessage =
+        err.response?.data?.message || "Failed to reset password.";
+      setMessage(errorMessage);
+      toast.error("Password Reset Failed", {
+        description: errorMessage,
+      });
     }
   };
 

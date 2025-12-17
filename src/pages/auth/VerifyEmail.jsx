@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { verifyEmail } from "@/api/auth";
@@ -15,6 +16,9 @@ export default function VerifyEmail() {
     if (!token) {
       setStatus("error");
       setMessage("Invalid verification link.");
+      toast.error("Invalid Link", {
+        description: "This verification link is invalid.",
+      });
       return;
     }
 
@@ -23,9 +27,17 @@ export default function VerifyEmail() {
         const response = await verifyEmail(token);
         setStatus("success");
         setMessage(response.message);
+        toast.success("Email Verified!", {
+          description: "You can now log in to your account.",
+        });
       } catch (err) {
         setStatus("error");
-        setMessage(err.response?.data?.message || "Verification failed.");
+        const errorMessage =
+          err.response?.data?.message || "Verification failed.";
+        setMessage(errorMessage);
+        toast.error("Verification Failed", {
+          description: errorMessage,
+        });
       }
     };
 

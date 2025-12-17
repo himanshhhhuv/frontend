@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +30,6 @@ const registerSchema = z.object({
 
 export default function Register() {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const {
@@ -42,7 +42,6 @@ export default function Register() {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    setError("");
 
     try {
       await registerUser({
@@ -50,16 +49,17 @@ export default function Register() {
         year: parseInt(data.year),
       });
 
-      navigate("/login", {
-        state: {
-          message:
-            "Registration successful! Please check your email to verify your account.",
-        },
+      toast.success("Registration Successful!", {
+        description: "Please check your email to verify your account.",
       });
+
+      navigate("/login");
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Registration failed. Please try again."
-      );
+      const message =
+        err.response?.data?.message || "Registration failed. Please try again.";
+      toast.error("Registration Failed", {
+        description: message,
+      });
     } finally {
       setLoading(false);
     }
@@ -74,12 +74,6 @@ export default function Register() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                {error}
-              </div>
-            )}
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>

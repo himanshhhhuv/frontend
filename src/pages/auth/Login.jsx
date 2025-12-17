@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +25,6 @@ const loginSchema = z.object({
 export default function Login() {
   const navigate = useNavigate();
   const { setAuth, getRedirectPath } = useAuthStore();
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const {
@@ -37,7 +37,6 @@ export default function Login() {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    setError("");
 
     try {
       const response = await loginUser(data);
@@ -45,13 +44,19 @@ export default function Login() {
 
       setAuth(user, tokens.accessToken, tokens.refreshToken);
 
+      toast.success("Login successful!", {
+        description: `Welcome back, ${user.profile?.name || user.email}!`,
+      });
+
       // Redirect based on role
       const redirectPath = getRedirectPath();
       navigate(redirectPath, { replace: true });
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
+      const message =
+        err.response?.data?.message || "Login failed. Please try again.";
+      toast.error("Login Failed", {
+        description: message,
+      });
     } finally {
       setLoading(false);
     }
@@ -66,12 +71,6 @@ export default function Login() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                {error}
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

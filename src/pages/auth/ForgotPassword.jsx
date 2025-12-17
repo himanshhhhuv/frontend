@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,9 +39,17 @@ export default function ForgotPassword() {
       const response = await forgotPassword(data.email);
       setStatus("success");
       setMessage(response.message);
+      toast.success("Email Sent!", {
+        description: "Check your inbox for the password reset link.",
+      });
     } catch (err) {
       setStatus("error");
-      setMessage(err.response?.data?.message || "Failed to send reset email.");
+      const errorMessage =
+        err.response?.data?.message || "Failed to send reset email.";
+      setMessage(errorMessage);
+      toast.error("Failed to Send Email", {
+        description: errorMessage,
+      });
     }
   };
 
