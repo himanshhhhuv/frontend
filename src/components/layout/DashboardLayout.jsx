@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -15,6 +16,7 @@ import {
   ShoppingCart01Icon,
   Settings01Icon,
   Logout01Icon,
+  CalendarCheckIn01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   Sidebar,
@@ -282,40 +284,44 @@ function SiteHeader({ role }) {
   const location = useLocation();
   const config = navConfig[role] || navConfig.STUDENT;
 
-  // Generate breadcrumbs from current path
-  const getBreadcrumbs = () => {
-    const pathSegments = location.pathname.split("/").filter(Boolean);
-    const breadcrumbs = [];
+  // Memoize current date - only recalculates when component mounts
+  const currentDate = useMemo(() => {
+    return new Date().toLocaleDateString("en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }, []);
 
-    // First segment is the role (admin, student, etc.)
+  // Memoize breadcrumbs - only recalculates when path or config changes
+  const breadcrumbs = useMemo(() => {
+    const pathSegments = location.pathname.split("/").filter(Boolean);
+    const result = [];
+
     if (pathSegments.length > 0) {
       const roleSegment = pathSegments[0];
       const roleLabel = routeLabels[roleSegment] || roleSegment;
       const rolePath = `/${roleSegment}`;
 
-      // Find the current page from nav config
       const currentItem = config.items.find(
         (item) => item.path === location.pathname
       );
 
       if (pathSegments.length === 1) {
-        // On dashboard (e.g., /admin, /student)
-        breadcrumbs.push({ label: roleLabel, path: rolePath, isLast: false });
-        breadcrumbs.push({ label: "Dashboard", path: null, isLast: true });
+        result.push({ label: roleLabel, path: rolePath, isLast: false });
+        result.push({ label: "Dashboard", path: null, isLast: true });
       } else {
-        // On a sub-page (e.g., /admin/users, /student/wallet)
-        breadcrumbs.push({ label: roleLabel, path: rolePath, isLast: false });
+        result.push({ label: roleLabel, path: rolePath, isLast: false });
         const pageSegment = pathSegments[1];
         const pageLabel =
           currentItem?.label || routeLabels[pageSegment] || pageSegment;
-        breadcrumbs.push({ label: pageLabel, path: null, isLast: true });
+        result.push({ label: pageLabel, path: null, isLast: true });
       }
     }
 
-    return breadcrumbs;
-  };
-
-  const breadcrumbs = getBreadcrumbs();
+    return result;
+  }, [location.pathname, config.items]);
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 lg:px-6 sticky top-0 z-10 bg-background">
@@ -337,7 +343,11 @@ function SiteHeader({ role }) {
           ))}
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
+          <HugeiconsIcon icon={CalendarCheckIn01Icon} className="size-4" />
+          <span>{currentDate}</span>
+        </div>
         <ModeToggle />
       </div>
     </header>
