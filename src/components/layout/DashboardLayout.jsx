@@ -255,7 +255,9 @@ function SiteHeader({ title }) {
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mx-2 h-4" />
       <h1 className="text-base font-medium">{title}</h1>
-      <ModeToggle />
+      <div className="ml-auto">
+        <ModeToggle />
+      </div>
     </header>
   );
 }
