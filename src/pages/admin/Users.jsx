@@ -1,44 +1,102 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  UserAdd01Icon,
+  Delete02Icon,
+  FilterIcon,
+} from "@hugeicons/core-free-icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { getUsers, createUser, deleteUser } from "@/api/admin";
 
 const userSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  rollNo: z.string().min(1),
-  phone: z.string().min(10),
-  course: z.string().min(1),
-  year: z.string().min(1),
-  role: z.string(),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  rollNo: z.string().min(1, "Roll number is required"),
+  phone: z.string().min(10, "Phone must be at least 10 digits"),
+  course: z.string().min(1, "Course is required"),
+  year: z.string().min(1, "Year is required"),
+  role: z.string().min(1, "Role is required"),
 });
+
+const roles = [
+  { value: "STUDENT", label: "Student" },
+  { value: "WARDEN", label: "Warden" },
+  { value: "ADMIN", label: "Admin" },
+  { value: "CANTEEN_MANAGER", label: "Canteen Manager" },
+  { value: "CARETAKER", label: "Caretaker" },
+];
+
+const getRoleBadgeVariant = (role) => {
+  switch (role) {
+    case "ADMIN":
+      return "destructive";
+    case "WARDEN":
+      return "default";
+    case "CANTEEN_MANAGER":
+      return "secondary";
+    case "CARETAKER":
+      return "outline";
+    default:
+      return "outline";
+  }
+};
 
 export default function Users() {
   const [showForm, setShowForm] = useState(false);
-  const [roleFilter, setRoleFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "users", roleFilter],
-    queryFn: () => getUsers({ role: roleFilter || undefined }),
+    queryFn: () =>
+      getUsers({ role: roleFilter === "ALL" ? undefined : roleFilter }),
   });
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(userSchema),
-    defaultValues: { role: "STUDENT" },
+    defaultValues: { role: "STUDENT", year: "1" },
   });
 
   const createMutation = useMutation({
@@ -47,41 +105,70 @@ export default function Users() {
       queryClient.invalidateQueries(["admin", "users"]);
       setShowForm(false);
       reset();
+      toast.success("User Created", {
+        description: "The new user has been created successfully.",
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to Create User", {
+        description: error.response?.data?.message || "Something went wrong.",
+      });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
-    onSuccess: () => queryClient.invalidateQueries(["admin", "users"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["admin", "users"]);
+      toast.success("User Deleted", {
+        description: "The user has been removed successfully.",
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to Delete User", {
+        description: error.response?.data?.message || "Something went wrong.",
+      });
+    },
   });
 
   const users = data?.data?.users || [];
 
+  const onSubmit = (data) => {
+    createMutation.mutate({ ...data, year: parseInt(data.year) });
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Manage Users</h1>
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Manage Users</h1>
+          <p className="text-muted-foreground">
+            Create and manage user accounts for the hostel system.
+          </p>
+        </div>
         <Button onClick={() => setShowForm(!showForm)}>
+          <HugeiconsIcon icon={UserAdd01Icon} className="mr-2 h-4 w-4" />
           {showForm ? "Cancel" : "Add User"}
         </Button>
       </div>
 
+      {/* Create User Form */}
       {showForm && (
         <Card>
           <CardHeader>
             <CardTitle>Create New User</CardTitle>
           </CardHeader>
           <CardContent>
-            <form
-              onSubmit={handleSubmit((data) =>
-                createMutation.mutate({ ...data, year: parseInt(data.year) })
-              )}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Name</Label>
-                  <Input {...register("name")} />
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="John Doe"
+                    {...register("name")}
+                  />
                   {errors.name && (
                     <p className="text-sm text-destructive">
                       {errors.name.message}
@@ -89,8 +176,13 @@ export default function Users() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Email</Label>
-                  <Input type="email" {...register("email")} />
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    {...register("email")}
+                  />
                   {errors.email && (
                     <p className="text-sm text-destructive">
                       {errors.email.message}
@@ -98,110 +190,259 @@ export default function Users() {
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Password</Label>
-                  <Input type="password" {...register("password")} />
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    {...register("password")}
+                  />
+                  {errors.password && (
+                    <p className="text-sm text-destructive">
+                      {errors.password.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Role</Label>
-                  <select
-                    {...register("role")}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="STUDENT">Student</option>
-                    <option value="WARDEN">Warden</option>
-                    <option value="ADMIN">Admin</option>
-                    <option value="CANTEEN_MANAGER">Canteen Manager</option>
-                    <option value="CARETAKER">Caretaker</option>
-                  </select>
+                  <Label htmlFor="role">Role</Label>
+                  <Controller
+                    name="role"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {roles.map((role) => (
+                            <SelectItem key={role.value} value={role.value}>
+                              {role.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.role && (
+                    <p className="text-sm text-destructive">
+                      {errors.role.message}
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Roll No</Label>
-                  <Input {...register("rollNo")} />
+                  <Label htmlFor="rollNo">Roll Number</Label>
+                  <Input
+                    id="rollNo"
+                    placeholder="2024001"
+                    {...register("rollNo")}
+                  />
+                  {errors.rollNo && (
+                    <p className="text-sm text-destructive">
+                      {errors.rollNo.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Phone</Label>
-                  <Input {...register("phone")} />
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    placeholder="9876543210"
+                    {...register("phone")}
+                  />
+                  {errors.phone && (
+                    <p className="text-sm text-destructive">
+                      {errors.phone.message}
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Course</Label>
-                  <Input {...register("course")} />
+                  <Label htmlFor="course">Course</Label>
+                  <Input
+                    id="course"
+                    placeholder="B.Tech CSE"
+                    {...register("course")}
+                  />
+                  {errors.course && (
+                    <p className="text-sm text-destructive">
+                      {errors.course.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Year</Label>
-                  <Input type="number" min="1" max="5" {...register("year")} />
+                  <Label htmlFor="year">Year</Label>
+                  <Controller
+                    name="year"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5].map((year) => (
+                            <SelectItem key={year} value={String(year)}>
+                              Year {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.year && (
+                    <p className="text-sm text-destructive">
+                      {errors.year.message}
+                    </p>
+                  )}
                 </div>
               </div>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Creating..." : "Create User"}
-              </Button>
+
+              <div className="flex gap-2">
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Creating..." : "Create User"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowForm(false);
+                    reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
       )}
 
-      <div className="flex gap-2 mb-4">
-        {["", "STUDENT", "WARDEN", "ADMIN", "CANTEEN_MANAGER", "CARETAKER"].map(
-          (role) => (
-            <Button
-              key={role}
-              variant={roleFilter === role ? "default" : "outline"}
-              size="sm"
-              onClick={() => setRoleFilter(role)}
-            >
-              {role || "All"}
-            </Button>
-          )
-        )}
+      {/* Filters */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <HugeiconsIcon
+            icon={FilterIcon}
+            className="h-4 w-4 text-muted-foreground"
+          />
+          <span className="text-sm font-medium">Filter by role:</span>
+        </div>
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All roles" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Roles</SelectItem>
+            {roles.map((role) => (
+              <SelectItem key={role.value} value={role.value}>
+                {role.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
+      {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Users</CardTitle>
+          <CardTitle>Users {users.length > 0 && `(${users.length})`}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p>Loading...</p>
-          ) : users.length === 0 ? (
-            <p className="text-muted-foreground">No users found.</p>
-          ) : (
-            <div className="space-y-3">
-              {users.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex justify-between items-center p-4 border rounded-lg"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">
-                        {user.profile?.name || "No name"}
-                      </p>
-                      <Badge>{user.role}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {user.email}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Roll: {user.profile?.rollNo} | Phone:{" "}
-                      {user.profile?.phone}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => deleteMutation.mutate(user.id)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              ))}
+            <div className="flex items-center justify-center py-8">
+              <p className="text-muted-foreground">Loading users...</p>
             </div>
+          ) : users.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <p className="text-muted-foreground">No users found.</p>
+              <p className="text-sm text-muted-foreground">
+                Try adjusting your filter or create a new user.
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Roll No</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      {user.profile?.name || "No name"}
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.profile?.rollNo || "-"}</TableCell>
+                    <TableCell>{user.profile?.phone || "-"}</TableCell>
+                    <TableCell>
+                      <Badge variant={getRoleBadgeVariant(user.role)}>
+                        {user.role.replace("_", " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <AlertDialog>
+                        <AlertDialogTrigger
+                          render={
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={deleteMutation.isPending}
+                            />
+                          }
+                        >
+                          <HugeiconsIcon
+                            icon={Delete02Icon}
+                            className="mr-1 h-4 w-4"
+                          />
+                          Delete
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete User</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete{" "}
+                              <strong>
+                                {user.profile?.name || user.email}
+                              </strong>
+                              ? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              variant="destructive"
+                              onClick={() => deleteMutation.mutate(user.id)}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
