@@ -44,6 +44,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getUsers, createUser, deleteUser, updateUserRole } from "@/api/admin";
 
 const userSchema = z.object({
@@ -81,13 +89,18 @@ const getRoleBadgeVariant = (role) => {
 };
 
 export default function Users() {
-  const [showForm, setShowForm] = useState(false);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
   const queryClient = useQueryClient();
+
+  // Role change dialog state
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [newRole, setNewRole] = useState("");
 
   // Debounce search input
   useEffect(() => {
@@ -142,7 +155,7 @@ export default function Users() {
     mutationFn: createUser,
     onSuccess: () => {
       queryClient.invalidateQueries(["admin", "users"]);
-      setShowForm(false);
+      setAddUserDialogOpen(false);
       reset();
       toast.success("User Created", {
         description: "The new user has been created successfully.",
@@ -174,6 +187,9 @@ export default function Users() {
     mutationFn: ({ id, role }) => updateUserRole(id, role),
     onSuccess: (data) => {
       queryClient.invalidateQueries(["admin", "users"]);
+      setRoleDialogOpen(false);
+      setSelectedUser(null);
+      setNewRole("");
       toast.success("Role Updated", {
         description: data.message || "User role has been updated successfully.",
       });
@@ -186,6 +202,20 @@ export default function Users() {
   });
 
   const users = data?.data?.users || [];
+
+  // Open role change dialog
+  const openRoleDialog = (user) => {
+    setSelectedUser(user);
+    setNewRole(user.role);
+    setRoleDialogOpen(true);
+  };
+
+  // Confirm role change
+  const handleRoleChange = () => {
+    if (selectedUser && newRole && newRole !== selectedUser.role) {
+      updateRoleMutation.mutate({ id: selectedUser.id, role: newRole });
+    }
+  };
 
   const onSubmit = (data) => {
     createMutation.mutate({ ...data, year: parseInt(data.year) });
@@ -201,190 +231,11 @@ export default function Users() {
             Create and manage user accounts for the hostel system.
           </p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
+        <Button onClick={() => setAddUserDialogOpen(true)}>
           <HugeiconsIcon icon={UserAdd01Icon} className="mr-2 h-4 w-4" />
-          {showForm ? "Cancel" : "Add User"}
+          Add User
         </Button>
       </div>
-
-      {/* Create User Form */}
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Create New User</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="John Doe"
-                    {...register("name")}
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-destructive">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="john@example.com"
-                    {...register("email")}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-destructive">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    {...register("password")}
-                  />
-                  {errors.password && (
-                    <p className="text-sm text-destructive">
-                      {errors.password.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Controller
-                    name="role"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {roles.map((role) => (
-                            <SelectItem key={role.value} value={role.value}>
-                              {role.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.role && (
-                    <p className="text-sm text-destructive">
-                      {errors.role.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="rollNo">Roll Number</Label>
-                  <Input
-                    id="rollNo"
-                    placeholder="2024001"
-                    {...register("rollNo")}
-                  />
-                  {errors.rollNo && (
-                    <p className="text-sm text-destructive">
-                      {errors.rollNo.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    placeholder="9876543210"
-                    {...register("phone")}
-                  />
-                  {errors.phone && (
-                    <p className="text-sm text-destructive">
-                      {errors.phone.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="course">Course</Label>
-                  <Input
-                    id="course"
-                    placeholder="B.Tech CSE"
-                    {...register("course")}
-                  />
-                  {errors.course && (
-                    <p className="text-sm text-destructive">
-                      {errors.course.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="year">Year</Label>
-                  <Controller
-                    name="year"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1, 2, 3, 4, 5].map((year) => (
-                            <SelectItem key={year} value={String(year)}>
-                              Year {year}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.year && (
-                    <p className="text-sm text-destructive">
-                      {errors.year.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Creating..." : "Create User"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false);
-                    reset();
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -473,30 +324,13 @@ export default function Users() {
                       <TableCell>{user.profile?.rollNo || "-"}</TableCell>
                       <TableCell>{user.profile?.phone || "-"}</TableCell>
                       <TableCell>
-                        <Select
-                          
-                          value={user.role}
-                          onValueChange={(newRole) =>
-                            updateRoleMutation.mutate({
-                              id: user.id,
-                              role: newRole,
-                            })
-                          }
-                          disabled={updateRoleMutation.isPending}
+                        <Badge
+                          variant={getRoleBadgeVariant(user.role)}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => openRoleDialog(user)}
                         >
-                          <SelectTrigger className="w-[180px] ">
-                            <Badge variant={getRoleBadgeVariant(user.role)}>
-                              {user.role.replace("_", " ")}
-                            </Badge>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {roles.map((role) => (
-                              <SelectItem  key={role.value} value={role.value}>
-                                {role.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          {user.role.replace("_", " ")}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <AlertDialog>
@@ -583,6 +417,245 @@ export default function Users() {
           )}
         </CardContent>
       </Card>
+
+      {/* Role Change Dialog */}
+      <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change User Role</DialogTitle>
+            <DialogDescription>
+              Update the role for{" "}
+              <strong>
+                {selectedUser?.profile?.name || selectedUser?.email}
+              </strong>
+              . This will change their permissions in the system.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Current Role</Label>
+              <Badge variant={getRoleBadgeVariant(selectedUser?.role)}>
+                {selectedUser?.role?.replace("_", " ")}
+              </Badge>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="newRole">New Role</Label>
+              <Select value={newRole} onValueChange={setNewRole}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select new role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRoleDialogOpen(false)}
+              disabled={updateRoleMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRoleChange}
+              disabled={
+                updateRoleMutation.isPending ||
+                newRole === selectedUser?.role ||
+                !newRole
+              }
+            >
+              {updateRoleMutation.isPending ? "Updating..." : "Update Role"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog
+        open={addUserDialogOpen}
+        onOpenChange={(open) => {
+          setAddUserDialogOpen(open);
+          if (!open) reset();
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogDescription>
+              Add a new user to the hostel management system.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input id="name" placeholder="John Doe" {...register("name")} />
+                {errors.name && (
+                  <p className="text-sm text-destructive">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive">
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  {...register("password")}
+                />
+                {errors.password && (
+                  <p className="text-sm text-destructive">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roles.map((role) => (
+                          <SelectItem key={role.value} value={role.value}>
+                            {role.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.role && (
+                  <p className="text-sm text-destructive">
+                    {errors.role.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="rollNo">Roll Number</Label>
+                <Input
+                  id="rollNo"
+                  placeholder="2024001"
+                  {...register("rollNo")}
+                />
+                {errors.rollNo && (
+                  <p className="text-sm text-destructive">
+                    {errors.rollNo.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  placeholder="9876543210"
+                  {...register("phone")}
+                />
+                {errors.phone && (
+                  <p className="text-sm text-destructive">
+                    {errors.phone.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="course">Course</Label>
+                <Input
+                  id="course"
+                  placeholder="B.Tech CSE"
+                  {...register("course")}
+                />
+                {errors.course && (
+                  <p className="text-sm text-destructive">
+                    {errors.course.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="year">Year</Label>
+                <Controller
+                  name="year"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5].map((year) => (
+                          <SelectItem key={year} value={String(year)}>
+                            Year {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.year && (
+                  <p className="text-sm text-destructive">
+                    {errors.year.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setAddUserDialogOpen(false);
+                  reset();
+                }}
+                disabled={createMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? "Creating..." : "Create User"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
