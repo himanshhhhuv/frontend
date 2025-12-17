@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-4">
@@ -10,8 +12,8 @@ export default function NotFound() {
         <p className="text-muted-foreground">
           The page you're looking for doesn't exist.
         </p>
-        <Button asChild>
-          <Link to="/">Go Home</Link>
+        <Button onClick={() => navigate(-1)}>
+          Go Back
         </Button>
       </div>
     </div>

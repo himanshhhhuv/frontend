@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export default function Unauthorized() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-4">
@@ -11,7 +13,7 @@ export default function Unauthorized() {
           You don't have permission to access this page.
         </p>
         <Button asChild>
-          <Link to="/">Go Home</Link>
+          <Button onClick={() => navigate(-1)}>Go Back</Button>
         </Button>
       </div>
     </div>
