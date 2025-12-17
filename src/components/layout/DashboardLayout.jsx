@@ -32,6 +32,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -44,6 +52,27 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/store/authStore";
 import { ModeToggle } from "../ui/mode-toggle";
+
+// Route labels for breadcrumbs
+const routeLabels = {
+  student: "Student",
+  warden: "Warden",
+  admin: "Admin",
+  canteen: "Canteen",
+  caretaker: "Caretaker",
+  dashboard: "Dashboard",
+  attendance: "Attendance",
+  wallet: "Wallet",
+  leaves: "Leaves",
+  complaints: "Complaints",
+  menu: "Menu",
+  profile: "Profile",
+  users: "Users",
+  rooms: "Rooms",
+  transactions: "Transactions",
+  billing: "Billing",
+  orders: "Orders",
+};
 
 // Navigation items per role
 const navConfig = {
@@ -249,12 +278,65 @@ function AppSidebar({ role }) {
   );
 }
 
-function SiteHeader({ title }) {
+function SiteHeader({ role }) {
+  const location = useLocation();
+  const config = navConfig[role] || navConfig.STUDENT;
+
+  // Generate breadcrumbs from current path
+  const getBreadcrumbs = () => {
+    const pathSegments = location.pathname.split("/").filter(Boolean);
+    const breadcrumbs = [];
+
+    // First segment is the role (admin, student, etc.)
+    if (pathSegments.length > 0) {
+      const roleSegment = pathSegments[0];
+      const roleLabel = routeLabels[roleSegment] || roleSegment;
+      const rolePath = `/${roleSegment}`;
+
+      // Find the current page from nav config
+      const currentItem = config.items.find(
+        (item) => item.path === location.pathname
+      );
+
+      if (pathSegments.length === 1) {
+        // On dashboard (e.g., /admin, /student)
+        breadcrumbs.push({ label: roleLabel, path: rolePath, isLast: false });
+        breadcrumbs.push({ label: "Dashboard", path: null, isLast: true });
+      } else {
+        // On a sub-page (e.g., /admin/users, /student/wallet)
+        breadcrumbs.push({ label: roleLabel, path: rolePath, isLast: false });
+        const pageSegment = pathSegments[1];
+        const pageLabel =
+          currentItem?.label || routeLabels[pageSegment] || pageSegment;
+        breadcrumbs.push({ label: pageLabel, path: null, isLast: true });
+      }
+    }
+
+    return breadcrumbs;
+  };
+
+  const breadcrumbs = getBreadcrumbs();
+
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 lg:px-6 sticky top-0 z-10 bg-background">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mx-2 h-4" />
-      <h1 className="text-base font-medium">{title}</h1>
+      <Breadcrumb>
+        <BreadcrumbList>
+          {breadcrumbs.map((crumb, index) => (
+            <BreadcrumbItem key={crumb.label}>
+              {index > 0 && <BreadcrumbSeparator />}
+              {crumb.isLast ? (
+                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink render={<Link to={crumb.path} />}>
+                  {crumb.label}
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
+          ))}
+        </BreadcrumbList>
+      </Breadcrumb>
       <div className="ml-auto">
         <ModeToggle />
       </div>
@@ -263,8 +345,6 @@ function SiteHeader({ title }) {
 }
 
 export default function DashboardLayout({ role }) {
-  const config = navConfig[role] || navConfig.STUDENT;
-
   return (
     <SidebarProvider
       style={{
@@ -274,7 +354,7 @@ export default function DashboardLayout({ role }) {
     >
       <AppSidebar role={role} />
       <SidebarInset>
-        <SiteHeader title={config.title} />
+        <SiteHeader role={role} />
         <div className="flex flex-1 flex-col gap-4 p-4 lg:p-6">
           <Outlet />
         </div>
