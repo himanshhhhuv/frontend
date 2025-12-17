@@ -44,7 +44,11 @@ const profileSchema = z.object({
     .regex(/^[0-9]+$/, "Parent phone must contain only numbers")
     .optional()
     .or(z.literal("")),
-  address: z.string().min(5, "Address must be at least 5 characters").optional().or(z.literal("")),
+  address: z
+    .string()
+    .min(5, "Address must be at least 5 characters")
+    .optional()
+    .or(z.literal("")),
 });
 
 export default function Profile() {
@@ -83,7 +87,8 @@ export default function Profile() {
     },
     onError: (error) => {
       toast.error("Update Failed", {
-        description: error.response?.data?.message || "Failed to update profile",
+        description:
+          error.response?.data?.message || "Failed to update profile",
       });
     },
   });
@@ -145,7 +150,9 @@ export default function Profile() {
         <p className="text-destructive">Failed to load profile</p>
         <Button
           variant="outline"
-          onClick={() => queryClient.invalidateQueries({ queryKey: ["student", "profile"] })}
+          onClick={() =>
+            queryClient.invalidateQueries({ queryKey: ["student", "profile"] })
+          }
         >
           Retry
         </Button>
@@ -174,7 +181,9 @@ export default function Profile() {
               </AvatarFallback>
             </Avatar>
             <div className="text-center sm:text-left space-y-1">
-              <h2 className="text-2xl font-bold">{profile.name || "Student"}</h2>
+              <h2 className="text-2xl font-bold">
+                {profile.name || "Student"}
+              </h2>
               <p className="text-muted-foreground">{user.email}</p>
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
                 <Badge variant="secondary">{user.role}</Badge>
@@ -194,15 +203,22 @@ export default function Profile() {
               <HugeiconsIcon icon={UserAccountIcon} className="h-5 w-5" />
               Personal Information
             </CardTitle>
-            <CardDescription>Your basic details and academic info</CardDescription>
+            <CardDescription>
+              Your basic details and academic info
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-primary/10 p-2">
-                <HugeiconsIcon icon={UserIcon} className="h-4 w-4 text-primary" />
+                <HugeiconsIcon
+                  icon={UserIcon}
+                  className="h-4 w-4 text-primary"
+                />
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Full Name</Label>
+                <Label className="text-xs text-muted-foreground">
+                  Full Name
+                </Label>
                 <p className="font-medium">{profile.name || "-"}</p>
               </div>
             </div>
@@ -211,10 +227,15 @@ export default function Profile() {
 
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-primary/10 p-2">
-                <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4 text-primary" />
+                <HugeiconsIcon
+                  icon={Mail01Icon}
+                  className="h-4 w-4 text-primary"
+                />
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Email Address</Label>
+                <Label className="text-xs text-muted-foreground">
+                  Email Address
+                </Label>
                 <p className="font-medium">{user.email || "-"}</p>
               </div>
             </div>
@@ -223,10 +244,15 @@ export default function Profile() {
 
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-primary/10 p-2">
-                <HugeiconsIcon icon={UserAccountIcon} className="h-4 w-4 text-primary" />
+                <HugeiconsIcon
+                  icon={UserAccountIcon}
+                  className="h-4 w-4 text-primary"
+                />
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Roll Number</Label>
+                <Label className="text-xs text-muted-foreground">
+                  Roll Number
+                </Label>
                 <p className="font-medium font-mono">{profile.rollNo || "-"}</p>
               </div>
             </div>
@@ -235,7 +261,10 @@ export default function Profile() {
 
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-primary/10 p-2">
-                <HugeiconsIcon icon={Book02Icon} className="h-4 w-4 text-primary" />
+                <HugeiconsIcon
+                  icon={Book02Icon}
+                  className="h-4 w-4 text-primary"
+                />
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Course</Label>
@@ -247,7 +276,10 @@ export default function Profile() {
 
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-primary/10 p-2">
-                <HugeiconsIcon icon={Calendar03Icon} className="h-4 w-4 text-primary" />
+                <HugeiconsIcon
+                  icon={Calendar03Icon}
+                  className="h-4 w-4 text-primary"
+                />
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Year</Label>
@@ -261,10 +293,15 @@ export default function Profile() {
 
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-primary/10 p-2">
-                <HugeiconsIcon icon={Door01Icon} className="h-4 w-4 text-primary" />
+                <HugeiconsIcon
+                  icon={Door01Icon}
+                  className="h-4 w-4 text-primary"
+                />
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Room Assignment</Label>
+                <Label className="text-xs text-muted-foreground">
+                  Room Assignment
+                </Label>
                 <p className="font-medium">
                   {room ? (
                     <span>
@@ -303,12 +340,17 @@ export default function Profile() {
                   {...register("phone")}
                 />
                 {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.phone.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="parentPhone" className="flex items-center gap-2">
+                <Label
+                  htmlFor="parentPhone"
+                  className="flex items-center gap-2"
+                >
                   <HugeiconsIcon icon={Call02Icon} className="h-4 w-4" />
                   Parent/Guardian Phone
                 </Label>
@@ -320,7 +362,9 @@ export default function Profile() {
                   {...register("parentPhone")}
                 />
                 {errors.parentPhone && (
-                  <p className="text-sm text-destructive">{errors.parentPhone.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.parentPhone.message}
+                  </p>
                 )}
               </div>
 
@@ -336,7 +380,9 @@ export default function Profile() {
                   {...register("address")}
                 />
                 {errors.address && (
-                  <p className="text-sm text-destructive">{errors.address.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.address.message}
+                  </p>
                 )}
               </div>
 
@@ -361,15 +407,21 @@ export default function Profile() {
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-lg border p-4">
-              <Label className="text-xs text-muted-foreground">Account ID</Label>
+              <Label className="text-xs text-muted-foreground">
+                Account ID
+              </Label>
               <p className="font-mono text-sm truncate">{user.id || "-"}</p>
             </div>
             <div className="rounded-lg border p-4">
-              <Label className="text-xs text-muted-foreground">Account Type</Label>
+              <Label className="text-xs text-muted-foreground">
+                Account Type
+              </Label>
               <p className="font-medium">{user.role || "-"}</p>
             </div>
             <div className="rounded-lg border p-4">
-              <Label className="text-xs text-muted-foreground">Member Since</Label>
+              <Label className="text-xs text-muted-foreground">
+                Member Since
+              </Label>
               <p className="font-medium">
                 {user.createdAt
                   ? new Date(user.createdAt).toLocaleDateString("en-IN", {
