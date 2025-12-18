@@ -344,7 +344,7 @@ function SiteHeader({ role }) {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-3">
-        <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
+        <div className="hidden sm:flex items-center gap-1.5 text-sm text-black dark:text-white border border-border bg-muted p-2 rounded-md dark:bg-muted-foreground/10">
           <HugeiconsIcon icon={CalendarCheckIn01Icon} className="size-4" />
           <span>{currentDate}</span>
         </div>
