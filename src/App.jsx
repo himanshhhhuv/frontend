@@ -32,12 +32,14 @@ import AdminUsers from "@/pages/admin/Users";
 import AdminRooms from "@/pages/admin/Rooms";
 import AdminMenu from "@/pages/admin/Menu";
 import AdminTransactions from "@/pages/admin/Transactions";
+import AdminProfile from "./pages/admin/Profile";
 
 // Canteen pages
 import CanteenDashboard from "@/pages/canteen/Dashboard";
 import CanteenBilling from "@/pages/canteen/Billing";
 import CanteenOrders from "@/pages/canteen/Orders";
 import CanteenMenu from "@/pages/canteen/Menu";
+import CanteenProfile from "./pages/canteen/Profile";
 
 // Caretaker pages
 import CaretakerDashboard from "@/pages/caretaker/Dashboard";
@@ -109,6 +111,7 @@ function App() {
                 <Route path="rooms" element={<AdminRooms />} />
                 <Route path="menu" element={<AdminMenu />} />
                 <Route path="transactions" element={<AdminTransactions />} />
+                <Route path="profile" element={<AdminProfile />} />
               </Route>
             </Route>
 
@@ -124,6 +127,7 @@ function App() {
                 <Route path="billing" element={<CanteenBilling />} />
                 <Route path="orders" element={<CanteenOrders />} />
                 <Route path="menu" element={<CanteenMenu />} />
+                <Route path="profile" element={<CanteenProfile />} />
               </Route>
             </Route>
 
@@ -143,7 +147,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-        <Toaster />
+        <Toaster position="top-right" richColors duration={1000} />
         <ReactQueryDevtools initialIsOpen={false} />
       </ThemeProvider>
     </QueryClientProvider>

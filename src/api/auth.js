@@ -42,3 +42,11 @@ export const resendVerificationEmail = async (email) => {
   const { data } = await api.post("/api/auth/resend-verification", { email });
   return data;
 };
+
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  const { data } = await api.put("/api/auth/change-password", {
+    currentPassword,
+    newPassword,
+  });
+  return data;
+};

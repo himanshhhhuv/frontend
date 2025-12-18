@@ -119,6 +119,7 @@ const navConfig = {
         path: "/admin/transactions",
         icon: CreditCardIcon,
       },
+      { label: "Profile", path: "/admin/profile", icon: Settings01Icon },
     ],
   },
   CANTEEN_MANAGER: {
@@ -128,6 +129,7 @@ const navConfig = {
       { label: "Billing", path: "/canteen/billing", icon: Invoice01Icon },
       { label: "Orders", path: "/canteen/orders", icon: ShoppingCart01Icon },
       { label: "Menu", path: "/canteen/menu", icon: Menu01Icon },
+      { label: "Profile", path: "/canteen/profile", icon: Settings01Icon },
     ],
   },
   CARETAKER: {
@@ -155,7 +157,7 @@ function AppSidebar({ role }) {
   };
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
