@@ -27,9 +27,21 @@ export const createRoom = async (roomData) => {
   return data;
 };
 
+export const getRooms = async (params = {}) => {
+  const { data } = await api.get("/api/admin/rooms", { params });
+  return data;
+};
+
 export const assignRoom = async (roomId, studentId) => {
   const { data } = await api.patch(`/api/admin/rooms/${roomId}/assign`, {
     studentId,
+  });
+  return data;
+};
+
+export const unassignRoom = async (roomId, studentId) => {
+  const { data } = await api.delete(`/api/admin/rooms/${roomId}/assign`, {
+    data: { studentId },
   });
   return data;
 };
