@@ -42,6 +42,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -52,7 +60,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { createRoom, getRooms, assignRoom, unassignRoom } from "@/api/admin";
+import {
+  createRoom,
+  getRooms,
+  assignRoom,
+  unassignRoom,
+  getUsers,
+} from "@/api/admin";
 
 const roomSchema = z.object({
   roomNo: z.string().min(1, "Room number is required"),
@@ -71,6 +85,7 @@ export default function Rooms() {
   const [floorFilter, setFloorFilter] = useState("ALL");
   const [availabilityFilter, setAvailabilityFilter] = useState("ALL");
   const [page, setPage] = useState(1);
+  const [studentSearchTerm, setStudentSearchTerm] = useState("");
   const limit = 10;
   const queryClient = useQueryClient();
 
@@ -94,6 +109,21 @@ export default function Rooms() {
     totalPages: 1,
   };
 
+  // Fetch unassigned students for combobox
+  const { data: studentsData, isLoading: isLoadingStudents } = useQuery({
+    queryKey: ["admin", "unassigned-students", studentSearchTerm],
+    queryFn: () =>
+      getUsers({
+        role: "STUDENT",
+        unassigned: true,
+        search: studentSearchTerm || undefined,
+        limit: 50, // Get more results for better search experience
+      }),
+    enabled: assignDialogOpen, // Only fetch when dialog is open
+  });
+
+  const unassignedStudents = studentsData?.data?.users || [];
+
   const createForm = useForm({
     resolver: zodResolver(roomSchema),
     defaultValues: { roomNo: "", floor: "", capacity: "" },
@@ -103,6 +133,12 @@ export default function Rooms() {
     resolver: zodResolver(assignSchema),
     defaultValues: { studentId: "" },
   });
+
+  // Get selected student for display (after assignForm is initialized)
+  const selectedStudentId = assignForm.watch("studentId");
+  const selectedStudent = unassignedStudents.find(
+    (s) => s.id === selectedStudentId
+  );
 
   // Create room mutation
   const createMutation = useMutation({
@@ -175,6 +211,7 @@ export default function Rooms() {
   const openAssignDialog = (room) => {
     setSelectedRoom(room);
     setAssignDialogOpen(true);
+    setStudentSearchTerm(""); // Reset search when opening dialog
   };
 
   const onCreateSubmit = (data) => {
@@ -183,7 +220,10 @@ export default function Rooms() {
 
   const onAssignSubmit = (data) => {
     if (selectedRoom) {
-      assignMutation.mutate({ roomId: selectedRoom.id, studentId: data.studentId });
+      assignMutation.mutate({
+        roomId: selectedRoom.id,
+        studentId: data.studentId,
+      });
     }
   };
 
@@ -213,7 +253,10 @@ export default function Rooms() {
       {/* Filters */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2">
-          <HugeiconsIcon icon={FilterIcon} className="h-4 w-4 text-muted-foreground" />
+          <HugeiconsIcon
+            icon={FilterIcon}
+            className="h-4 w-4 text-muted-foreground"
+          />
           <span className="text-sm font-medium">Floor:</span>
           <Select value={floorFilter} onValueChange={handleFloorFilterChange}>
             <SelectTrigger className="w-[120px]">
@@ -232,7 +275,10 @@ export default function Rooms() {
 
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Availability:</span>
-          <Select value={availabilityFilter} onValueChange={handleAvailabilityFilterChange}>
+          <Select
+            value={availabilityFilter}
+            onValueChange={handleAvailabilityFilterChange}
+          >
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="All rooms" />
             </SelectTrigger>
@@ -285,11 +331,14 @@ export default function Rooms() {
                 <TableBody>
                   {rooms.map((room) => (
                     <TableRow key={room.id}>
-                      <TableCell className="font-medium">{room.roomNo}</TableCell>
+                      <TableCell className="font-medium">
+                        {room.roomNo}
+                      </TableCell>
                       <TableCell>Floor {room.floor}</TableCell>
                       <TableCell>{room.capacity}</TableCell>
                       <TableCell>
-                        {room.occupied}/{room.capacity} {getOccupancyBadge(room)}
+                        {room.occupied}/{room.capacity}{" "}
+                        {getOccupancyBadge(room)}
                       </TableCell>
                       <TableCell>
                         {room.students && room.students.length > 0 ? (
@@ -310,15 +359,21 @@ export default function Rooms() {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Remove Student</AlertDialogTitle>
+                                    <AlertDialogTitle>
+                                      Remove Student
+                                    </AlertDialogTitle>
                                     <AlertDialogDescription>
                                       Are you sure you want to remove{" "}
-                                      <strong>{student.profile?.name || student.email}</strong>{" "}
+                                      <strong>
+                                        {student.profile?.name || student.email}
+                                      </strong>{" "}
                                       from room <strong>{room.roomNo}</strong>?
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       variant="destructive"
                                       onClick={() =>
@@ -336,7 +391,9 @@ export default function Rooms() {
                             ))}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground">No students</span>
+                          <span className="text-muted-foreground">
+                            No students
+                          </span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -346,7 +403,10 @@ export default function Rooms() {
                           onClick={() => openAssignDialog(room)}
                           disabled={room.occupied >= room.capacity}
                         >
-                          <HugeiconsIcon icon={UserAdd01Icon} className="mr-1 h-4 w-4" />
+                          <HugeiconsIcon
+                            icon={UserAdd01Icon}
+                            className="mr-1 h-4 w-4"
+                          />
                           Assign
                         </Button>
                       </TableCell>
@@ -368,17 +428,25 @@ export default function Rooms() {
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page <= 1 || isLoading}
                     >
-                      <HugeiconsIcon icon={ArrowLeft01Icon} className="mr-1 h-4 w-4" />
+                      <HugeiconsIcon
+                        icon={ArrowLeft01Icon}
+                        className="mr-1 h-4 w-4"
+                      />
                       Previous
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(pagination.totalPages, p + 1))
+                      }
                       disabled={page >= pagination.totalPages || isLoading}
                     >
                       Next
-                      <HugeiconsIcon icon={ArrowRight01Icon} className="ml-1 h-4 w-4" />
+                      <HugeiconsIcon
+                        icon={ArrowRight01Icon}
+                        className="ml-1 h-4 w-4"
+                      />
                     </Button>
                   </div>
                 </div>
@@ -404,11 +472,18 @@ export default function Rooms() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+          <form
+            onSubmit={createForm.handleSubmit(onCreateSubmit)}
+            className="space-y-4"
+          >
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="roomNo">Room Number</Label>
-                <Input id="roomNo" placeholder="A101" {...createForm.register("roomNo")} />
+                <Input
+                  id="roomNo"
+                  placeholder="A101"
+                  {...createForm.register("roomNo")}
+                />
                 {createForm.formState.errors.roomNo && (
                   <p className="text-sm text-destructive">
                     {createForm.formState.errors.roomNo.message}
@@ -474,6 +549,7 @@ export default function Rooms() {
           setAssignDialogOpen(open);
           if (!open) {
             setSelectedRoom(null);
+            setStudentSearchTerm("");
             assignForm.reset();
           }
         }}
@@ -483,18 +559,88 @@ export default function Rooms() {
             <DialogTitle>Assign Student to Room</DialogTitle>
             <DialogDescription>
               Assign a student to room <strong>{selectedRoom?.roomNo}</strong>.
-              This room has {selectedRoom?.capacity - selectedRoom?.occupied} spot(s) available.
+              This room has {selectedRoom?.capacity - selectedRoom?.occupied}{" "}
+              spot(s) available.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={assignForm.handleSubmit(onAssignSubmit)} className="space-y-4">
+          <form
+            onSubmit={assignForm.handleSubmit(onAssignSubmit)}
+            className="space-y-4"
+          >
             <div className="space-y-2">
-              <Label htmlFor="studentId">Student ID</Label>
-              <Input
-                id="studentId"
-                placeholder="Enter student ID (UUID)"
-                {...assignForm.register("studentId")}
-              />
+              <Label htmlFor="studentId">Select Student</Label>
+              <Combobox
+                items={unassignedStudents}
+                value={assignForm.watch("studentId") || ""}
+                onValueChange={(value) => {
+                  assignForm.setValue("studentId", value || "", {
+                    shouldValidate: true,
+                  });
+                  // Clear search when a student is selected
+                  if (value) {
+                    setStudentSearchTerm("");
+                  }
+                }}
+              >
+                <ComboboxInput
+                  id="studentId"
+                  placeholder="Search by name, roll number, or email..."
+                  showClear
+                  value={
+                    selectedStudent && !studentSearchTerm
+                      ? `${selectedStudent.profile?.name || ""} (${
+                          selectedStudent.profile?.rollNo || ""
+                        }) - ${selectedStudent.email || ""}`
+                      : studentSearchTerm
+                  }
+                  onChange={(e) => {
+                    setStudentSearchTerm(e.target.value);
+                    // Clear selection when user types
+                    if (e.target.value && selectedStudentId) {
+                      assignForm.setValue("studentId", "", {
+                        shouldValidate: false,
+                      });
+                    }
+                  }}
+                />
+                <ComboboxContent>
+                  <ComboboxEmpty>
+                    {isLoadingStudents
+                      ? "Loading students..."
+                      : studentSearchTerm
+                      ? "No students found"
+                      : "Start typing to search for students"}
+                  </ComboboxEmpty>
+                  <ComboboxList>
+                    {(student) => {
+                      // Client-side filtering for better UX
+                      if (studentSearchTerm) {
+                        const term = studentSearchTerm.toLowerCase();
+                        const matches =
+                          student.email?.toLowerCase().includes(term) ||
+                          student.profile?.name?.toLowerCase().includes(term) ||
+                          student.profile?.rollNo?.toLowerCase().includes(term);
+                        if (!matches) return null;
+                      }
+                      return (
+                        <ComboboxItem key={student.id} value={student.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {student.profile?.name || "Unknown"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {student.profile?.rollNo &&
+                                `${student.profile.rollNo} • `}
+                              {student.email}
+                            </span>
+                          </div>
+                        </ComboboxItem>
+                      );
+                    }}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
               {assignForm.formState.errors.studentId && (
                 <p className="text-sm text-destructive">
                   {assignForm.formState.errors.studentId.message}
