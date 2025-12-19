@@ -6,6 +6,7 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
   },
 });
 
@@ -41,8 +42,8 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/auth/refresh-token`,
+        const response = await api.post(
+          "/api/auth/refresh-token",
           { refreshToken }
         );
 
