@@ -165,15 +165,16 @@ function AppSidebar({ role }) {
               size="lg"
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg">
+              <div className="text-muted-foreground flex size-8 items-center justify-center rounded-lg">
                 <HugeiconsIcon
                   icon={Home01Icon}
-                  strokeWidth={2}
+                  strokeWidth={3}
+                  size={64}
                   className="size-4"
                 />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Hostel HMS</span>
+                <span className="truncate font-semibold">ATLAS HMS</span>
                 <span className="truncate text-xs text-muted-foreground">
                   {config.title}
                 </span>
@@ -327,8 +328,8 @@ function SiteHeader({ role }) {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 lg:px-6 sticky top-0 z-10 bg-background">
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mx-2 h-4" />
+      <SidebarTrigger className="-ml-1" size="lg" />
+      <Separator orientation="vertical" className="mx-2 h-full" />
       <Breadcrumb>
         <BreadcrumbList>
           {breadcrumbs.map((crumb, index) => (
@@ -360,7 +361,7 @@ export default function DashboardLayout({ role }) {
   return (
     <SidebarProvider
       style={{
-        "--sidebar-width": "16rem",
+        "--sidebar-width": "18rem",
         "--header-height": "3.5rem",
       }}
     >
