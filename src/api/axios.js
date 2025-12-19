@@ -10,9 +10,12 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - attach access token
+// Request interceptor - attach access token and ensure ngrok bypass header
 api.interceptors.request.use(
   (config) => {
+    // Always include ngrok bypass header to skip warning page
+    config.headers["ngrok-skip-browser-warning"] = "true";
+
     const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -42,10 +45,9 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        const response = await api.post(
-          "/api/auth/refresh-token",
-          { refreshToken }
-        );
+        const response = await api.post("/api/auth/refresh-token", {
+          refreshToken,
+        });
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;
         useAuthStore.getState().setTokens(accessToken, newRefreshToken);
