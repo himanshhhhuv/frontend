@@ -238,10 +238,12 @@ function AppSidebar({ role }) {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-56 rounded-lg"
-                side="right"
+                className="w-56 sm:w-64 rounded-lg z-50 max-w-[calc(100vw-2rem)]"
+                side="top"
                 align="end"
                 sideOffset={4}
+                alignOffset={6}
+                collisionPadding={10}
               >
                 <DropdownMenuGroup>
                   <DropdownMenuLabel className="p-0 font-normal">
