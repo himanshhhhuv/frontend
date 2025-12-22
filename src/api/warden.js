@@ -47,3 +47,9 @@ export const getDashboardStats = async () => {
   const { data } = await api.get("/api/warden/dashboard/stats");
   return data;
 };
+
+export const getStudentsList = async (date) => {
+  const params = date ? `?date=${date}` : "";
+  const { data } = await api.get(`/api/warden/students${params}`);
+  return data;
+};
