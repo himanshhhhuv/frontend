@@ -212,7 +212,7 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
               {isLoading ? (
-                <div className="h-[240px] animate-pulse rounded-md bg-muted" />
+                <div className="h-[280px] animate-pulse rounded-md bg-muted" />
               ) : walletChartData.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No wallet transactions to display yet.
@@ -220,7 +220,7 @@ export default function StudentDashboard() {
               ) : (
                 <ChartContainer
                   config={walletChartConfig}
-                  className="aspect-auto h-[250px] w-full"
+                  className="aspect-auto h-[280px] w-[75%] mx-auto"
                 >
                   <BarChart data={walletChartData} stackOffset="sign">
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -229,7 +229,7 @@ export default function StudentDashboard() {
                       tickLine={false}
                       axisLine={false}
                       tickMargin={4}
-                      minTickGap={10}
+                      minTickGap={1}
                       tickFormatter={(value) => {
                         const date = new Date(value);
                         return date.toLocaleDateString("en-IN", {
@@ -288,7 +288,7 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
               {isLoading ? (
-                <div className="h-[240px] animate-pulse rounded-md bg-muted" />
+                <div className="h-[260px] animate-pulse rounded-md bg-muted" />
               ) : leavePieData.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No leave data to display yet.
@@ -296,7 +296,7 @@ export default function StudentDashboard() {
               ) : (
                 <ChartContainer
                   config={leavesChartConfig}
-                  className="mx-auto h-[250px] max-w-xs"
+                  className="mx-auto h-[260px] "
                 >
                   <PieChart>
                     <ChartTooltip
@@ -317,8 +317,8 @@ export default function StudentDashboard() {
                       dataKey="value"
                       nameKey="status"
                       innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={4}
+                      outerRadius={100}
+                      paddingAngle={2}
                     >
                       {leavePieData.map((entry) => (
                         <Cell
