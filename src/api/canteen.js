@@ -38,6 +38,11 @@ export const getOrderById = async (id) => {
   return data;
 };
 
+export const getDashboardStats = async () => {
+  const { data } = await api.get("/api/canteen/dashboard/stats");
+  return data;
+};
+
 // Billing
 export const quickBilling = async (rollNo, items, mealType) => {
   const { data } = await api.post("/api/canteen/billing", {

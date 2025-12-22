@@ -46,9 +46,14 @@ export const unassignRoom = async (roomId, studentId) => {
   return data;
 };
 
-// Reports
+// Reports / Dashboard
 export const getSummaryReport = async () => {
   const { data } = await api.get("/api/admin/reports/summary");
+  return data;
+};
+
+export const getAdminDashboardStats = async () => {
+  const { data } = await api.get("/api/admin/dashboard/stats");
   return data;
 };
 

@@ -6,12 +6,16 @@ export const getPendingLeaves = async () => {
 };
 
 export const approveLeave = async (id) => {
-  const { data } = await api.patch(`/api/warden/leaves/${id}/approve`);
+  const { data } = await api.patch(`/api/warden/leaves/${id}/approve`, {
+    status: "APPROVED",
+  });
   return data;
 };
 
 export const rejectLeave = async (id) => {
-  const { data } = await api.patch(`/api/warden/leaves/${id}/reject`);
+  const { data } = await api.patch(`/api/warden/leaves/${id}/reject`, {
+    status: "REJECTED",
+  });
   return data;
 };
 
@@ -36,5 +40,10 @@ export const updateComplaintStatus = async (id, status, remarks) => {
     status,
     remarks,
   });
+  return data;
+};
+
+export const getDashboardStats = async () => {
+  const { data } = await api.get("/api/warden/dashboard/stats");
   return data;
 };

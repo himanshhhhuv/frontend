@@ -15,6 +15,11 @@ export const getAttendance = async () => {
   return data;
 };
 
+export const getDashboardStats = async () => {
+  const { data } = await api.get("/api/student/dashboard/stats");
+  return data;
+};
+
 export const getWallet = async () => {
   const { data } = await api.get("/api/student/wallet");
   return data;
