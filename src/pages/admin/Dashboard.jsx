@@ -36,11 +36,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import {
-  getSummaryReport,
-  getCanteenStats,
-  getTransactions,
-} from "@/api/admin";
+import { getAdminDashboardStats, getTransactions } from "@/api/admin";
 import { DashboardQuickStats } from "@/components/admin/dashboard/QuickStats";
 import { DashboardCanteenStats } from "@/components/admin/dashboard/CanteenStats";
 import { DashboardChartsRow } from "@/components/admin/dashboard/ChartsRow";
@@ -67,16 +63,10 @@ const chartConfig = {
 };
 
 export default function AdminDashboard() {
-  // Fetch summary report
-  const { data: summaryData, isLoading: summaryLoading } = useQuery({
-    queryKey: ["admin", "summary"],
-    queryFn: getSummaryReport,
-  });
-
-  // Fetch canteen stats
-  const { data: canteenData, isLoading: canteenLoading } = useQuery({
-    queryKey: ["admin", "canteen-stats"],
-    queryFn: getCanteenStats,
+  // Fetch unified dashboard stats
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+    queryKey: ["admin", "dashboard-stats"],
+    queryFn: getAdminDashboardStats,
   });
 
   // Fetch recent transactions for chart
@@ -85,8 +75,21 @@ export default function AdminDashboard() {
     queryFn: getTransactions,
   });
 
-  const summary = summaryData?.data || {};
-  const canteenStats = canteenData?.data || {};
+  const rawStats = dashboardData?.data || {};
+
+  const summary = {
+    totalStudents: rawStats.cards?.totalStudents,
+    totalRooms: rawStats.cards?.totalRooms,
+    occupiedRooms: rawStats.cards?.occupiedRooms,
+    availableRooms: rawStats.cards?.availableRooms,
+    pendingLeaves: rawStats.cards?.pendingLeaves,
+    pendingComplaints: rawStats.cards?.pendingComplaints,
+    attendanceToday: rawStats.attendanceToday,
+    leavesByStatus: rawStats.leavesByStatus,
+    complaintsByStatus: rawStats.complaintsByStatus,
+  };
+
+  const canteenStats = rawStats.canteenToday || {};
   const transactions = transactionsData?.data?.transactions || [];
 
   // Format currency
@@ -147,7 +150,7 @@ export default function AdminDashboard() {
 
   const dailyData = getDailyTransactionData();
 
-  const isLoading = summaryLoading || canteenLoading;
+  const isLoading = dashboardLoading;
 
   return (
     <div className="space-y-6">
