@@ -6,7 +6,7 @@ import {
   FilterIcon,
   Tick02Icon,
   ArrowRight01Icon,
-
+  UserIcon,
   Door01Icon,
   Calendar03Icon,
 } from "@hugeicons/core-free-icons";
@@ -49,8 +49,7 @@ export default function Complaints() {
     },
     onError: (error) => {
       toast.error("Failed to Update Status", {
-        description:
-          error.response?.data?.message || "Something went wrong.",
+        description: error.response?.data?.message || "Something went wrong.",
       });
     },
   });
@@ -65,8 +64,7 @@ export default function Complaints() {
     },
     onError: (error) => {
       toast.error("Failed to Resolve Complaint", {
-        description:
-          error.response?.data?.message || "Something went wrong.",
+        description: error.response?.data?.message || "Something went wrong.",
       });
     },
   });
@@ -166,7 +164,9 @@ export default function Complaints() {
               <p className="text-sm text-muted-foreground">
                 {filter === "ALL"
                   ? "There are no complaints to display."
-                  : `No ${filter.toLowerCase().replace("_", " ")} complaints found.`}
+                  : `No ${filter
+                      .toLowerCase()
+                      .replace("_", " ")} complaints found.`}
               </p>
             </div>
           ) : (
@@ -190,10 +190,10 @@ export default function Complaints() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-1">
-                          {/* <HugeiconsIcon
-                            icon={User01Icon}
+                          <HugeiconsIcon
+                            icon={UserIcon}
                             className="h-3 w-3 text-muted-foreground"
-                          /> */}
+                          />
                           <span className="text-sm">
                             {complaint.student?.profile?.name ||
                               "Unknown Student"}
@@ -283,9 +283,18 @@ export default function Complaints() {
                           </Button>
                         )}
                         {complaint.status === "RESOLVED" && (
-                          <span className="text-xs text-muted-foreground">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled
+                            className="cursor-default"
+                          >
+                            <HugeiconsIcon
+                              icon={Tick02Icon}
+                              className="mr-1 h-4 w-4"
+                            />
                             Resolved
-                          </span>
+                          </Button>
                         )}
                       </div>
                     </TableCell>
