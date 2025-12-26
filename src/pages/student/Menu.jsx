@@ -4,12 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { getMenu } from "@/api/canteen";
 
 const categories = [
-  "BREAKFAST",
-  "LUNCH",
-  "DINNER",
-  "SNACKS",
-  "BEVERAGES",
-  "EXTRAS",
+  { value: "BREAKFAST", label: "Breakfast", emoji: "🍳" },
+  { value: "LUNCH", label: "Lunch", emoji: "🍛" },
+  { value: "DINNER", label: "Dinner", emoji: "🍽️" },
+  { value: "SNACKS", label: "Snacks", emoji: "🍿" },
+  { value: "FRUITS", label: "Fruits", emoji: "🍎" },
+  { value: "BEVERAGES", label: "Beverages", emoji: "☕" },
+  { value: "EXTRAS", label: "Extras", emoji: "🍪" },
 ];
 
 export default function Menu() {
@@ -18,60 +19,80 @@ export default function Menu() {
     queryFn: () => getMenu(),
   });
 
-  if (isLoading) {
-    return <div className="text-center py-8">Loading menu...</div>;
-  }
-
-  const menuItems = data?.menu || [];
-
-  const groupedMenu = categories.reduce((acc, category) => {
-    acc[category] = menuItems.filter((item) => item.category === category);
-    return acc;
-  }, {});
+  // Fix: Access correct data path from API response
+  const groupedItems = data?.data?.grouped || data?.grouped || {};
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Canteen Menu</h1>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Canteen Menu</h1>
+        <p className="text-muted-foreground">
+          Browse available food items and prices.
+        </p>
+      </div>
 
-      {categories.map((category) => {
-        const items = groupedMenu[category];
-        if (!items || items.length === 0) return null;
-
-        return (
-          <Card key={category}>
-            <CardHeader>
-              <CardTitle>
-                {category.charAt(0) + category.slice(1).toLowerCase()}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between items-center p-3 border rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        per {item.unit}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">₹{item.price}</p>
-                      <Badge
-                        variant={item.isAvailable ? "default" : "secondary"}
+      {/* Grouped View */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-muted-foreground">Loading menu...</p>
+        </div>
+      ) : Object.keys(groupedItems).length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+            <p className="text-muted-foreground">No menu items found.</p>
+            <p className="text-sm text-muted-foreground">
+              Please check back later.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {categories
+            .filter((cat) => groupedItems[cat.value]?.length > 0)
+            .map((category) => (
+              <Card key={category.value}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="text-2xl">{category.emoji}</span>
+                    {category.label}
+                    <Badge variant="secondary" className="ml-auto">
+                      {groupedItems[category.value]?.length || 0} items
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {groupedItems[category.value]?.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between rounded-lg border p-3"
                       >
-                        {item.isAvailable ? "Available" : "Unavailable"}
-                      </Badge>
-                    </div>
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            ₹{item.price} / {item.unit}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={
+                              item.isAvailable !== false
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {item.isAvailable !== false ? "✓" : "✗"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+                </CardContent>
+              </Card>
+            ))}
+        </div>
+      )}
     </div>
   );
 }
