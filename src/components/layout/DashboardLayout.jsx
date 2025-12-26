@@ -17,6 +17,7 @@ import {
   Settings01Icon,
   Logout01Icon,
   CalendarCheckIn01Icon,
+  DashboardCircleIcon,
 } from "@hugeicons/core-free-icons";
 import {
   Sidebar,
@@ -81,7 +82,7 @@ const navConfig = {
   STUDENT: {
     title: "Student Portal",
     items: [
-      { label: "Dashboard", path: "/student", icon: Home01Icon },
+      { label: "Dashboard", path: "/student", icon: DashboardCircleIcon },
       {
         label: "Attendance",
         path: "/student/attendance",
@@ -97,7 +98,7 @@ const navConfig = {
   WARDEN: {
     title: "Warden Portal",
     items: [
-      { label: "Dashboard", path: "/warden", icon: Home01Icon },
+      { label: "Dashboard", path: "/warden", icon: DashboardCircleIcon },
       {
         label: "Leave Approvals",
         path: "/warden/leaves",
@@ -110,7 +111,7 @@ const navConfig = {
   ADMIN: {
     title: "Admin Portal",
     items: [
-      { label: "Dashboard", path: "/admin", icon: Home01Icon },
+      { label: "Dashboard", path: "/admin", icon: DashboardCircleIcon },
       { label: "Users", path: "/admin/users", icon: UserMultipleIcon },
       { label: "Rooms", path: "/admin/rooms", icon: Door01Icon },
       { label: "Menu", path: "/admin/menu", icon: Menu01Icon },
@@ -125,7 +126,7 @@ const navConfig = {
   CANTEEN_MANAGER: {
     title: "Canteen Portal",
     items: [
-      { label: "Dashboard", path: "/canteen", icon: Home01Icon },
+      { label: "Dashboard", path: "/canteen", icon: DashboardCircleIcon },
       { label: "Billing", path: "/canteen/billing", icon: Invoice01Icon },
       { label: "Orders", path: "/canteen/orders", icon: ShoppingCart01Icon },
       { label: "Menu", path: "/canteen/menu", icon: Menu01Icon },
@@ -135,7 +136,7 @@ const navConfig = {
   CARETAKER: {
     title: "Caretaker Portal",
     items: [
-      { label: "Dashboard", path: "/caretaker", icon: Home01Icon },
+      { label: "Dashboard", path: "/caretaker", icon: DashboardCircleIcon },
       {
         label: "Complaints",
         path: "/caretaker/complaints",
