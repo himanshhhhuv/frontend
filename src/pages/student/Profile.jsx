@@ -14,6 +14,7 @@ import {
   Door01Icon,
   Edit02Icon,
   UserAccountIcon,
+  LockPasswordIcon,
 } from "@hugeicons/core-free-icons";
 import {
   Card,
@@ -29,6 +30,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getProfile, updateProfile } from "@/api/student";
+import { changePassword, logoutUser } from "@/api/auth";
+import { useAuthStore } from "@/store/authStore";
 
 // Validation schema
 const profileSchema = z.object({
@@ -51,8 +54,25 @@ const profileSchema = z.object({
     .or(z.literal("")),
 });
 
+const passwordSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(6, "Current password must be at least 6 characters"),
+    newPassword: z
+      .string()
+      .min(6, "New password must be at least 6 characters")
+      .max(128, "New password is too long"),
+    confirmPassword: z.string().min(6, "Please confirm your new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+
 export default function Profile() {
   const queryClient = useQueryClient();
+  const { logout: logoutStore } = useAuthStore();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["student", "profile"],
@@ -77,6 +97,20 @@ export default function Profile() {
     },
   });
 
+  const {
+    register: registerPassword,
+    handleSubmit: handleSubmitPassword,
+    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting },
+    reset: resetPassword,
+  } = useForm({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
   const mutation = useMutation({
     mutationFn: updateProfile,
     onSuccess: () => {
@@ -95,6 +129,41 @@ export default function Profile() {
 
   const onSubmit = (formData) => {
     mutation.mutate(formData);
+  };
+
+  const changePasswordMutation = useMutation({
+    mutationFn: changePassword,
+    onSuccess: () => {
+      toast.success("Password updated", {
+        description: "Your password has been changed successfully.",
+      });
+      resetPassword();
+    },
+    onError: (error) => {
+      const message =
+        error?.response?.data?.message ||
+        "Failed to change password. Please try again.";
+      toast.error("Change password failed", {
+        description: message,
+      });
+    },
+  });
+
+  const handleChangePassword = (values) => {
+    changePasswordMutation.mutate({
+      currentPassword: values.currentPassword,
+      newPassword: values.newPassword,
+    });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      // ignore API errors, still clear local session
+    } finally {
+      logoutStore();
+    }
   };
 
   // Get initials for avatar
@@ -432,6 +501,99 @@ export default function Profile() {
                   : "-"}
               </p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Security / Change password */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <HugeiconsIcon icon={LockPasswordIcon} className="h-5 w-5" />
+            Security
+          </CardTitle>
+          <CardDescription>
+            Update your password and manage sign-out.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form
+            className="space-y-4"
+            onSubmit={handleSubmitPassword(handleChangePassword)}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Current password</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                autoComplete="current-password"
+                placeholder="Enter current password"
+                {...registerPassword("currentPassword")}
+              />
+              {passwordErrors.currentPassword && (
+                <p className="text-sm text-destructive">
+                  {passwordErrors.currentPassword.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Enter new password"
+                {...registerPassword("newPassword")}
+              />
+              {passwordErrors.newPassword && (
+                <p className="text-sm text-destructive">
+                  {passwordErrors.newPassword.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm new password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Re-enter new password"
+                {...registerPassword("confirmPassword")}
+              />
+              {passwordErrors.confirmPassword && (
+                <p className="text-sm text-destructive">
+                  {passwordErrors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={
+                isPasswordSubmitting || changePasswordMutation.isPending
+              }
+            >
+              {changePasswordMutation.isPending
+                ? "Updating..."
+                : "Change Password"}
+            </Button>
+          </form>
+
+          <Separator />
+
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium">Sign out</p>
+              <p className="text-xs text-muted-foreground">
+                Log out from this browser session.
+              </p>
+            </div>
+            <Button variant="outline" onClick={handleLogout}>
+              Sign out
+            </Button>
           </div>
         </CardContent>
       </Card>
