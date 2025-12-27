@@ -11,6 +11,7 @@ import {
   Tick02Icon,
   Cancel01Icon,
   FilterIcon,
+  KitchenUtensilsIcon,
 } from "@hugeicons/core-free-icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,9 +44,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  getMenu,
+  getAllMenuItems,
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
@@ -88,14 +98,14 @@ const getCategoryBadgeVariant = (category) => {
 };
 
 export default function Menu() {
-  const [showForm, setShowForm] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [viewMode, setViewMode] = useState("list");
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "menu"],
-    queryFn: () => getMenu(),
+    queryFn: () => getAllMenuItems(),
   });
 
   const {
@@ -114,7 +124,7 @@ export default function Menu() {
       createMenuItem({ ...formData, price: parseFloat(formData.price) }),
     onSuccess: () => {
       queryClient.invalidateQueries(["admin", "menu"]);
-      setShowForm(false);
+      setDialogOpen(false);
       reset();
       toast.success("Menu Item Added", {
         description: "The new item has been added to the menu.",
@@ -173,6 +183,13 @@ export default function Menu() {
     createMutation.mutate(formData);
   };
 
+  const handleDialogOpenChange = (open) => {
+    setDialogOpen(open);
+    if (!open) {
+      reset();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -183,20 +200,22 @@ export default function Menu() {
             Add, edit, and manage canteen menu items.
           </p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          <HugeiconsIcon icon={Add01Icon} className="mr-2 h-4 w-4" />
-          {showForm ? "Cancel" : "Add Item"}
-        </Button>
-      </div>
-
-      {/* Create Menu Item Form */}
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Add New Menu Item</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+          <DialogTrigger asChild>
+            <Button>
+              <HugeiconsIcon icon={Add01Icon} className="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[525px]">
+            <DialogHeader>
+              <DialogTitle>Add New Menu Item</DialogTitle>
+              <DialogDescription>
+                Create a new item for the canteen menu. Fill in all the details
+                below.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Item Name</Label>
@@ -250,7 +269,7 @@ export default function Menu() {
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="50"
+                    placeholder="50.00"
                     {...register("price")}
                   />
                   {errors.price && (
@@ -293,25 +312,36 @@ export default function Menu() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Adding..." : "Add Item"}
-                </Button>
+              <DialogFooter>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    setShowForm(false);
-                    reset();
-                  }}
+                  onClick={() => handleDialogOpenChange(false)}
+                  disabled={createMutation.isPending}
                 >
                   Cancel
                 </Button>
-              </div>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <HugeiconsIcon
+                        icon={Add01Icon}
+                        className="mr-2 h-4 w-4"
+                      />
+                      Add Item
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
             </form>
-          </CardContent>
-        </Card>
-      )}
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* View Mode Tabs */}
       <Tabs value={viewMode} onValueChange={setViewMode}>
@@ -360,10 +390,18 @@ export default function Menu() {
                   <p className="text-muted-foreground">Loading menu...</p>
                 </div>
               ) : filteredItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <p className="text-muted-foreground">No menu items found.</p>
-                  <p className="text-sm text-muted-foreground">
-                    Add a new item to get started.
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <HugeiconsIcon
+                    icon={KitchenUtensilsIcon}
+                    className="h-12 w-12 text-muted-foreground/50 mb-4"
+                  />
+                  <p className="text-muted-foreground font-medium">
+                    No menu items found.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {categoryFilter === "ALL"
+                      ? "Add a new item to get started."
+                      : `No items found in this category. Try a different filter.`}
                   </p>
                 </div>
               ) : (
@@ -405,6 +443,11 @@ export default function Menu() {
                               item.isAvailable !== false
                                 ? "default"
                                 : "secondary"
+                            }
+                            className={
+                              item.isAvailable !== false
+                                ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
+                                : "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-900/30 dark:text-gray-400"
                             }
                           >
                             {item.isAvailable !== false
@@ -495,64 +538,94 @@ export default function Menu() {
             </div>
           ) : Object.keys(groupedItems).length === 0 ? (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-muted-foreground">No menu items found.</p>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <HugeiconsIcon
+                  icon={KitchenUtensilsIcon}
+                  className="h-12 w-12 text-muted-foreground/50 mb-4"
+                />
+                <p className="text-muted-foreground font-medium">
+                  No menu items found.
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
                   Add a new item to get started.
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {categories
                 .filter((cat) => groupedItems[cat.value]?.length > 0)
                 .map((category) => (
-                  <Card key={category.value}>
-                    <CardHeader>
+                  <Card key={category.value} className="overflow-hidden">
+                    <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2">
                         <span className="text-2xl">{category.emoji}</span>
-                        {category.label}
-                        <Badge variant="secondary" className="ml-auto">
-                          {groupedItems[category.value]?.length || 0} items
+                        <span className="flex-1">{category.label}</span>
+                        <Badge variant="secondary" className="shrink-0">
+                          {groupedItems[category.value]?.length || 0}
                         </Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {groupedItems[category.value]?.map((item) => (
                           <div
                             key={item.id}
-                            className="flex items-center justify-between rounded-lg border p-3"
+                            className="flex items-center justify-between rounded-lg border p-3 transition-all hover:border-primary/50 hover:shadow-sm"
                           >
-                            <div>
-                              <p className="font-medium">{item.name}</p>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">
+                                {item.name}
+                              </p>
                               <p className="text-sm text-muted-foreground">
                                 ₹{item.price} / {item.unit}
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant={
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  toggleMutation.mutate({
+                                    id: item.id,
+                                    isAvailable: item.isAvailable === false,
+                                  })
+                                }
+                                disabled={toggleMutation.isPending}
+                                className="h-7 w-7 p-0"
+                                title={
                                   item.isAvailable !== false
-                                    ? "default"
-                                    : "secondary"
+                                    ? "Disable item"
+                                    : "Enable item"
                                 }
                               >
-                                {item.isAvailable !== false ? "✓" : "✗"}
-                              </Badge>
+                                <HugeiconsIcon
+                                  icon={
+                                    item.isAvailable !== false
+                                      ? Tick02Icon
+                                      : Cancel01Icon
+                                  }
+                                  className={`h-4 w-4 ${
+                                    item.isAvailable !== false
+                                      ? "text-green-600"
+                                      : "text-gray-400"
+                                  }`}
+                                />
+                              </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger
                                   render={
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      className="h-8 w-8"
+                                      className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      disabled={deleteMutation.isPending}
                                     />
                                   }
                                 >
                                   <HugeiconsIcon
                                     icon={Delete02Icon}
-                                    className="h-4 w-4 text-destructive"
+                                    className="h-4 w-4"
                                   />
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -562,7 +635,8 @@ export default function Menu() {
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
                                       Are you sure you want to delete{" "}
-                                      <strong>{item.name}</strong>?
+                                      <strong>{item.name}</strong>? This action
+                                      cannot be undone.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
