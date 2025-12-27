@@ -25,6 +25,8 @@ import WardenDashboard from "@/pages/warden/Dashboard";
 import WardenLeaves from "@/pages/warden/Leaves";
 import WardenAttendance from "@/pages/warden/Attendance";
 import WardenComplaints from "@/pages/warden/Complaints";
+import WardenMenu from "@/pages/warden/Menu";
+import WardenProfile from "@/pages/warden/Profile";
 
 // Admin pages
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -33,6 +35,9 @@ import AdminRooms from "@/pages/admin/Rooms";
 import AdminMenu from "@/pages/admin/Menu";
 import AdminTransactions from "@/pages/admin/Transactions";
 import AdminProfile from "./pages/admin/Profile";
+import AdminAttendance from "@/pages/admin/Attendance"; 
+import AdminLeaves from "./pages/admin/Leaves";
+import AdminComplaints from "./pages/admin/Complaints";
 
 // Canteen pages
 import CanteenDashboard from "@/pages/canteen/Dashboard";
@@ -100,6 +105,8 @@ function App() {
                 <Route path="leaves" element={<WardenLeaves />} />
                 <Route path="attendance" element={<WardenAttendance />} />
                 <Route path="complaints" element={<WardenComplaints />} />
+                <Route path="profile" element={<WardenProfile />} />
+                <Route path="menu" element={<WardenMenu />} />
               </Route>
             </Route>
 
@@ -109,9 +116,12 @@ function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="rooms" element={<AdminRooms />} />
+                <Route path="attendance" element={<AdminAttendance />} />
                 <Route path="menu" element={<AdminMenu />} />
                 <Route path="transactions" element={<AdminTransactions />} />
                 <Route path="profile" element={<AdminProfile />} />
+                <Route path="leaves" element={<AdminLeaves />} />
+                <Route path="complaints" element={<AdminComplaints />} />
               </Route>
             </Route>
 
