@@ -7,6 +7,12 @@ export const getMenu = async (category) => {
   return data;
 };
 
+// Get all menu items including unavailable (Admin only)
+export const getAllMenuItems = async (params = {}) => {
+  const { data } = await api.get("/api/canteen/menu/all", { params });
+  return data;
+};
+
 export const createMenuItem = async (itemData) => {
   const { data } = await api.post("/api/canteen/menu", itemData);
   return data;
