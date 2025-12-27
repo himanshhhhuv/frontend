@@ -11,6 +11,11 @@ import {
   MoneySend01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
+  EyeIcon,
+  UserIcon,
+  Calendar03Icon,
+ DocumentAttachmentIcon,
+  ShoppingCartIcon,
 } from "@hugeicons/core-free-icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +36,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getTransactions } from "@/api/admin";
 
 export default function Transactions() {
@@ -38,6 +50,7 @@ export default function Transactions() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState("10");
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "transactions"],
@@ -306,6 +319,7 @@ export default function Transactions() {
                     <TableHead>Description</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -360,6 +374,17 @@ export default function Transactions() {
                           {tx.type === "CREDIT" ? "+" : "-"}
                           {formatCurrency(Math.abs(tx.amount))}
                         </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedTransaction(tx)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <HugeiconsIcon icon={EyeIcon} className="h-4 w-4" />
+                          <span className="sr-only">View details</span>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -445,6 +470,270 @@ export default function Transactions() {
           )}
         </CardContent>
       </Card>
+
+      {/* Transaction Details Dialog */}
+      <Dialog
+        open={!!selectedTransaction}
+        onOpenChange={(open) => !open && setSelectedTransaction(null)}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+            <DialogDescription>
+              Complete information about this transaction
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedTransaction && (
+            <div className="space-y-6">
+              {/* Transaction Info */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <HugeiconsIcon icon={CreditCardIcon} className="h-4 w-4" />
+                    Transaction Information
+                  </h3>
+                  <div className="grid gap-3">
+                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm text-muted-foreground">
+                        Transaction ID
+                      </span>
+                      <span className="text-sm font-mono">
+                        {selectedTransaction.id}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm text-muted-foreground">
+                        Date & Time
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <HugeiconsIcon
+                          icon={Calendar03Icon}
+                          className="h-3 w-3 text-muted-foreground"
+                        />
+                        <span className="text-sm">
+                          {formatDate(
+                            selectedTransaction.date ||
+                              selectedTransaction.createdAt
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm text-muted-foreground">
+                        Type
+                      </span>
+                      <Badge
+                        variant={
+                          selectedTransaction.type === "CREDIT"
+                            ? "default"
+                            : "secondary"
+                        }
+                        className={
+                          selectedTransaction.type === "CREDIT"
+                            ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400"
+                        }
+                      >
+                        <HugeiconsIcon
+                          icon={
+                            selectedTransaction.type === "CREDIT"
+                              ? ArrowDown01Icon
+                              : ArrowUp01Icon
+                          }
+                          className="mr-1 h-3 w-3"
+                        />
+                        {selectedTransaction.type}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm text-muted-foreground">
+                        Amount
+                      </span>
+                      <span
+                        className={`text-lg font-bold ${
+                          selectedTransaction.type === "CREDIT"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {selectedTransaction.type === "CREDIT" ? "+" : "-"}
+                        {formatCurrency(Math.abs(selectedTransaction.amount))}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm text-muted-foreground block mb-2">
+                        Description
+                      </span>
+                      <p className="text-sm">
+                        {selectedTransaction.description || "No description"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Student Info */}
+                {selectedTransaction.student && (
+                  <div>
+                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <HugeiconsIcon icon={UserIcon} className="h-4 w-4" />
+                      Student Information
+                    </h3>
+                    <div className="grid gap-3">
+                      <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm text-muted-foreground">
+                          Name
+                        </span>
+                        <span className="text-sm font-medium">
+                          {selectedTransaction.student.profile?.name || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm text-muted-foreground">
+                          Roll Number
+                        </span>
+                        <Badge variant="outline" className="text-sm">
+                          {selectedTransaction.student.profile?.rollNo || "N/A"}
+                        </Badge>
+                      </div>
+                      {selectedTransaction.student.email && (
+                        <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                          <span className="text-sm text-muted-foreground">
+                            Email
+                          </span>
+                          <span className="text-sm">
+                            {selectedTransaction.student.email}
+                          </span>
+                        </div>
+                      )}
+                      {selectedTransaction.student.profile?.course && (
+                        <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                          <span className="text-sm text-muted-foreground">
+                            Course
+                          </span>
+                          <span className="text-sm">
+                            {selectedTransaction.student.profile.course}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Food Order Info */}
+                {selectedTransaction.foodOrder && (
+                  <div>
+                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <HugeiconsIcon
+                        icon={ShoppingCartIcon}
+                        className="h-4 w-4"
+                      />
+                      Related Food Order
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">
+                            Order Number
+                          </span>
+                          <Badge variant="outline" className="font-mono">
+                            {selectedTransaction.foodOrder.orderNumber ||
+                              selectedTransaction.foodOrder.id}
+                          </Badge>
+                        </div>
+                        {selectedTransaction.foodOrder.mealType && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">
+                              Meal Type
+                            </span>
+                            <Badge variant="secondary">
+                              {selectedTransaction.foodOrder.mealType.replace(
+                                "_",
+                                " "
+                              )}
+                            </Badge>
+                          </div>
+                        )}
+                        {selectedTransaction.foodOrder.totalAmount && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">
+                              Order Total
+                            </span>
+                            <span className="text-sm font-semibold">
+                              {formatCurrency(
+                                selectedTransaction.foodOrder.totalAmount
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        {selectedTransaction.foodOrder.createdAt && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">
+                              Order Date
+                            </span>
+                            <span className="text-sm">
+                              {formatDate(
+                                selectedTransaction.foodOrder.createdAt
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        {selectedTransaction.foodOrder.servedBy?.profile
+                          ?.name && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">
+                              Served By
+                            </span>
+                            <span className="text-sm">
+                              {
+                                selectedTransaction.foodOrder.servedBy.profile
+                                  .name
+                              }
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Order Items */}
+                      {selectedTransaction.foodOrder.items &&
+                        selectedTransaction.foodOrder.items.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-semibold mb-2 text-muted-foreground">
+                              Order Items
+                            </h4>
+                            <div className="space-y-2">
+                              {selectedTransaction.foodOrder.items.map(
+                                (item, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex justify-between items-center p-2 bg-background border rounded-md"
+                                  >
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium">
+                                        {item.itemName}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Qty: {item.quantity} ×{" "}
+                                        {formatCurrency(item.unitPrice)}
+                                      </p>
+                                    </div>
+                                    <span className="text-sm font-semibold">
+                                      {formatCurrency(item.subtotal)}
+                                    </span>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
