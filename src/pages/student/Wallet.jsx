@@ -38,7 +38,185 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { getWallet } from "@/api/student";
+
+// Transaction Details Dialog Component
+function TransactionDetailsDialog({ transaction }) {
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const getMealTypeEmoji = (mealType) => {
+    const emojis = {
+      BREAKFAST: "🍳",
+      LUNCH: "🍛",
+      EVENING_SNACKS: "🍿",
+      DINNER: "🍽️",
+      OTHER: "🍴",
+    };
+    return emojis[mealType] || "🍴";
+  };
+
+  const hasFoodOrder = transaction?.foodOrder && Object.keys(transaction.foodOrder).length > 0;
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          View Details
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            Transaction Details
+            {hasFoodOrder && ` - Order #${transaction.foodOrder.orderNumber}`}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-4">
+          {/* Transaction Info */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Transaction Type
+              </p>
+              <Badge
+                variant={transaction.type === "CREDIT" ? "default" : "secondary"}
+                className={`mt-1 ${
+                  transaction.type === "CREDIT"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                }`}
+              >
+                <HugeiconsIcon
+                  icon={
+                    transaction.type === "CREDIT"
+                      ? ArrowDown01Icon
+                      : ArrowUp01Icon
+                  }
+                  className="mr-1 h-3 w-3"
+                />
+                {transaction.type}
+              </Badge>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Amount</p>
+              <p
+                className={`mt-1 text-lg font-bold ${
+                  transaction.type === "CREDIT"
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {transaction.type === "CREDIT" ? "+" : "-"}
+                {formatCurrency(Math.abs(transaction.amount))}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Date & Time
+              </p>
+              <p className="mt-1">{formatDate(transaction.date || transaction.createdAt)}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Description
+              </p>
+              <p className="mt-1">{transaction.description || "No description"}</p>
+            </div>
+          </div>
+
+          {/* Food Order Details */}
+          {hasFoodOrder && (
+            <>
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium text-muted-foreground mb-3">
+                  Food Order Details
+                </p>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Order Number</p>
+                    <p className="font-medium">{transaction.foodOrder.orderNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Meal Type</p>
+                    <Badge variant="secondary" className="mt-1 gap-1">
+                      <span>
+                        {getMealTypeEmoji(transaction.foodOrder.mealType)}
+                      </span>
+                      {transaction.foodOrder.mealType}
+                    </Badge>
+                  </div>
+                  {transaction.foodOrder.servedBy && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Served By</p>
+                      <p className="font-medium">
+                        {transaction.foodOrder.servedBy.profile?.name || "Unknown"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Order Items */}
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Items Purchased
+                  </p>
+                  <div className="border rounded-lg divide-y">
+                    {transaction.foodOrder.items?.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center p-3"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium">{item.itemName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {item.quantity} x {formatCurrency(item.unitPrice)}
+                          </p>
+                        </div>
+                        <p className="font-bold">{formatCurrency(item.subtotal)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Order Total */}
+                <div className="flex justify-between items-center pt-4 border-t mt-4">
+                  <p className="text-lg font-bold">Order Total</p>
+                  <p className="text-xl font-bold text-green-600">
+                    {formatCurrency(transaction.foodOrder.totalAmount || 0)}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function Wallet() {
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -348,6 +526,7 @@ export default function Wallet() {
                       <TableHead>Description</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -395,6 +574,9 @@ export default function Wallet() {
                             {formatCurrency(Math.abs(tx.amount))}
                           </span>
                         </TableCell>
+                        <TableCell className="text-center">
+                          <TransactionDetailsDialog transaction={tx} />
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -416,7 +598,7 @@ export default function Wallet() {
                         {formatDate(tx.date || tx.createdAt)}
                       </p>
                     </div>
-                    <div className="text-right ml-4">
+                    <div className="text-right ml-4 flex flex-col items-end gap-2">
                       <p
                         className={`font-bold ${
                           tx.type === "CREDIT"
@@ -427,16 +609,19 @@ export default function Wallet() {
                         {tx.type === "CREDIT" ? "+" : "-"}
                         {formatCurrency(Math.abs(tx.amount))}
                       </p>
-                      <Badge
-                        variant={tx.type === "CREDIT" ? "default" : "secondary"}
-                        className={`text-xs ${
-                          tx.type === "CREDIT"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                        }`}
-                      >
-                        {tx.type}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={tx.type === "CREDIT" ? "default" : "secondary"}
+                          className={`text-xs ${
+                            tx.type === "CREDIT"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                          }`}
+                        >
+                          {tx.type}
+                        </Badge>
+                        <TransactionDetailsDialog transaction={tx} />
+                      </div>
                     </div>
                   </div>
                 ))}
