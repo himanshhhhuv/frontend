@@ -55,6 +55,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/store/authStore";
 import { ModeToggle } from "../ui/mode-toggle";
+import{AnimatedThemeToggler} from "../ui/animated-theme-toggler";
 
 // Route labels for breadcrumbs
 const routeLabels = {
@@ -83,11 +84,7 @@ const navConfig = {
     title: "Student Portal",
     items: [
       { label: "Dashboard", path: "/student", icon: DashboardCircleIcon },
-      {
-        label: "Attendance",
-        path: "/student/attendance",
-        icon: Calendar03Icon,
-      },
+      { label: "Attendance", path: "/student/attendance", icon: Calendar03Icon },
       { label: "Wallet", path: "/student/wallet", icon: Wallet01Icon },
       { label: "Leaves", path: "/student/leaves", icon: Notebook01Icon },
       { label: "Complaints", path: "/student/complaints", icon: Message01Icon },
@@ -99,27 +96,27 @@ const navConfig = {
     title: "Warden Portal",
     items: [
       { label: "Dashboard", path: "/warden", icon: DashboardCircleIcon },
-      {
-        label: "Leave Approvals",
-        path: "/warden/leaves",
-        icon: Notebook01Icon,
-      },
       { label: "Attendance", path: "/warden/attendance", icon: Calendar03Icon },
+      { label: "Leaves", path: "/warden/leaves", icon: Notebook01Icon },
       { label: "Complaints", path: "/warden/complaints", icon: Message01Icon },
+      { label: "Menu", path: "/warden/menu", icon: Menu01Icon },
+      { label: "Profile", path: "/warden/profile", icon: Settings01Icon },
+      
+      
+      // To match theme: Attendance > Leaves > Complaints order after Dashboard
     ],
   },
   ADMIN: {
     title: "Admin Portal",
     items: [
       { label: "Dashboard", path: "/admin", icon: DashboardCircleIcon },
+      { label: "Attendance", path: "/admin/attendance", icon: Calendar03Icon },
       { label: "Users", path: "/admin/users", icon: UserMultipleIcon },
       { label: "Rooms", path: "/admin/rooms", icon: Door01Icon },
+      { label: "Transactions", path: "/admin/transactions", icon: CreditCardIcon },
+      { label: "Leaves", path: "/admin/leaves", icon: Notebook01Icon },
+      { label: "Complaints", path: "/admin/complaints", icon: Message01Icon },
       { label: "Menu", path: "/admin/menu", icon: Menu01Icon },
-      {
-        label: "Transactions",
-        path: "/admin/transactions",
-        icon: CreditCardIcon,
-      },
       { label: "Profile", path: "/admin/profile", icon: Settings01Icon },
     ],
   },
@@ -137,11 +134,7 @@ const navConfig = {
     title: "Caretaker Portal",
     items: [
       { label: "Dashboard", path: "/caretaker", icon: DashboardCircleIcon },
-      {
-        label: "Complaints",
-        path: "/caretaker/complaints",
-        icon: Message01Icon,
-      },
+      { label: "Complaints", path: "/caretaker/complaints", icon: Message01Icon },
     ],
   },
 };
@@ -195,12 +188,15 @@ function AppSidebar({ role }) {
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
+                      className=" cursor-pointer  "
                       tooltip={item.label}
                       isActive={isActive}
+                      
                       onClick={() => navigate(item.path)}
                     >
                       <HugeiconsIcon icon={item.icon} strokeWidth={2} />
                       <span>{item.label}</span>
+                    
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -354,7 +350,7 @@ function SiteHeader({ role }) {
           <HugeiconsIcon icon={CalendarCheckIn01Icon} className="size-4" />
           <span>{currentDate}</span>
         </div>
-        <ModeToggle />
+        <AnimatedThemeToggler className="transition-all duration-300 hover:scale-115 cursor-pointer " />
       </div>
     </header>
   );

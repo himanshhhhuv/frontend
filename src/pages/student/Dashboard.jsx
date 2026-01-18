@@ -210,7 +210,7 @@ export default function StudentDashboard() {
                 Recent credits and debits over time
               </CardDescription>
             </CardHeader>
-            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6 ">
               {isLoading ? (
                 <div className="h-[280px] animate-pulse rounded-md bg-muted" />
               ) : walletChartData.length === 0 ? (
@@ -220,7 +220,7 @@ export default function StudentDashboard() {
               ) : (
                 <ChartContainer
                   config={walletChartConfig}
-                  className="aspect-auto h-[280px] w-[75%] mx-auto"
+                  className="aspect-auto h-[280px]  mx-auto"
                 >
                   <BarChart data={walletChartData} stackOffset="sign">
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -263,14 +263,14 @@ export default function StudentDashboard() {
                       dataKey="credit"
                       name="Credits"
                       stackId="wallet"
-                      fill="#2563eb" // Professional blue (Blue-600)
+                      fill="var(--chart-1)" // Professional blue (Blue-600)
                       radius={[0, 0, 0, 0]}
                     />
                     <Bar
                       dataKey="debit"
                       name="Debits"
                       stackId="wallet"
-                      fill="#f59e42" // Professional amber (Amber-500)
+                      fill="var(--chart-2)" // Professional amber (Amber-500)
                       radius={[0, 0, 0, 0]}
                     />
                   </BarChart>
@@ -286,7 +286,7 @@ export default function StudentDashboard() {
                 Distribution of your leave requests
               </CardDescription>
             </CardHeader>
-            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-4">
               {isLoading ? (
                 <div className="h-[260px] animate-pulse rounded-md bg-muted" />
               ) : leavePieData.length === 0 ? (
@@ -296,7 +296,7 @@ export default function StudentDashboard() {
               ) : (
                 <ChartContainer
                   config={leavesChartConfig}
-                  className="mx-auto h-[260px] "
+                  className="mx-auto h-[260px]  "
                 >
                   <PieChart>
                     <ChartTooltip
@@ -323,7 +323,13 @@ export default function StudentDashboard() {
                       {leavePieData.map((entry) => (
                         <Cell
                           key={entry.status}
-                          fill={`var(--color-${entry.status})`}
+                          fill={
+                            entry.status === "PENDING"
+                              ? "var(--foreground)"
+                              : entry.status === "APPROVED"
+                              ? "var(--sidebar-primary)"
+                              : "var(--chart-5)"
+                          }
                         />
                       ))}
                     </Pie>

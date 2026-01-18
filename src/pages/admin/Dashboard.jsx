@@ -46,19 +46,19 @@ import { DashboardRoomAndOverview } from "@/components/admin/dashboard/RoomAndOv
 const chartConfig = {
   credits: {
     label: "Credits",
-    color: "hsl(var(--chart-1))",
+    color: "var(--chart-1)",
   },
   debits: {
     label: "Debits",
-    color: "hsl(var(--chart-2))",
+    color: "var(--chart-2)",
   },
   present: {
     label: "Present",
-    color: "hsl(var(--chart-1))",
+    color: "var(--chart-1)",
   },
   absent: {
     label: "Absent",
-    color: "hsl(var(--chart-2))",
+    color: "var(--chart-2)",
   },
 };
 
@@ -107,12 +107,12 @@ export default function AdminDashboard() {
     {
       name: "Present",
       value: summary.attendanceToday?.present || 0,
-      fill: "hsl(var(--chart-1))",
+      fill: "var(--chart-1)",
     },
     {
       name: "Absent",
       value: summary.attendanceToday?.absent || 0,
-      fill: "hsl(var(--chart-2))",
+      fill: "var(--chart-2)",
     },
   ];
 

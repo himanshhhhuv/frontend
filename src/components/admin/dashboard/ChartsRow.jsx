@@ -60,13 +60,13 @@ export function DashboardChartsRow({
                 />
                 <Bar
                   dataKey="credits"
-                  fill="hsl(var(--chart-1))"
+                  fill="var(--chart-1)"
                   radius={[4, 4, 0, 0]}
                   name="Credits"
                 />
                 <Bar
                   dataKey="debits"
-                  fill="hsl(var(--chart-2))"
+                  fill="var(--chart-2)"
                   radius={[4, 4, 0, 0]}
                   name="Debits"
                 />
@@ -108,11 +108,17 @@ export function DashboardChartsRow({
               </ChartContainer>
               <div className="mt-4 flex justify-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-[hsl(var(--chart-1))]" />
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: "var(--chart-1)" }}
+                  />
                   <span>Present: {summary.attendanceToday?.present || 0}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-[hsl(var(--chart-2))]" />
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: "var(--chart-2)" }}
+                  />
                   <span>Absent: {summary.attendanceToday?.absent || 0}</span>
                 </div>
               </div>
