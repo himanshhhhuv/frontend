@@ -135,6 +135,8 @@ const navConfig = {
     items: [
       { label: "Dashboard", path: "/caretaker", icon: DashboardCircleIcon },
       { label: "Complaints", path: "/caretaker/complaints", icon: Message01Icon },
+      { label: "Attendance", path: "/caretaker/attendance", icon: Calendar03Icon },
+      { label: "Leaves", path: "/caretaker/leaves", icon: Notebook01Icon },
     ],
   },
 };
