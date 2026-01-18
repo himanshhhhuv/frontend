@@ -49,7 +49,8 @@ import CanteenProfile from "./pages/canteen/Profile";
 // Caretaker pages
 import CaretakerDashboard from "@/pages/caretaker/Dashboard";
 import CaretakerComplaints from "@/pages/caretaker/Complaints";
-
+import CaretakerAttendance from "@/pages/caretaker/Attendance";
+import CaretakerLeaves from "@/pages/caretaker/Leaves";
 // Layouts
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -149,6 +150,8 @@ function App() {
               >
                 <Route index element={<CaretakerDashboard />} />
                 <Route path="complaints" element={<CaretakerComplaints />} />
+                <Route path="attendance" element={<CaretakerAttendance />} />
+                <Route path="leaves" element={<CaretakerLeaves />} />
               </Route>
             </Route>
 
